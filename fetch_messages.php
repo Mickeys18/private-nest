@@ -1,25 +1,15 @@
-<?php
+﻿<?php
 require_once "config.php";
-
-// Protect the endpoint from unauthenticated requests
-if (!isset($_SESSION["loggedin"]) || $_SESSION["loggedin"] !== true) {
-    exit;
-}
-
+if (!isset($_SESSION["loggedin"]) || $_SESSION["loggedin"] !== true) { exit; }
 $user_id = $_SESSION["user_id"];
-
 try {
-    // Pull the message feed ordered chronologically
     $stmt = $pdo->query("SELECT messages.*, users.username FROM messages JOIN users ON messages.sender_id = users.id ORDER BY created_at ASC");
     $messages = $stmt->fetchAll(PDO::FETCH_ASSOC);
-
     if (empty($messages)) {
         echo "<div style='text-align:center; color:#94a3b8; margin-top:40px; font-size:0.9rem; font-style:italic;'>No messages yet. Say hello! ✨</div>";
     }
-
     foreach ($messages as $msg) {
         $class = ($msg['sender_id'] == $user_id) ? 'sent' : 'received';
-        
         if ($msg['message_type'] == 'text') {
             echo "<div class='message " . $class . "'>" . htmlspecialchars($msg['message_content']) . "</div>";
         } elseif ($msg['message_type'] == 'voice') {
@@ -27,6 +17,6 @@ try {
         }
     }
 } catch (PDOException $e) {
-    echo "<div style='color:red; text-align:center; font-size:0.85rem;'>Sync error...</div>";
+    echo "<div style='color:red; text-align:center;'>Sync error...</div>";
 }
 ?>

@@ -1,13 +1,7 @@
 <?php
 require_once "config.php";
-
-if (!isset($_SESSION["loggedin"]) || $_SESSION["loggedin"] !== true) {
-    header("location: login.php");
-    exit;
-}
-
-$user_id = $_SESSION["user_id"];
-$username = $_SESSION["username"];
+if (!isset($_SESSION["loggedin"]) || $_SESSION["loggedin"] !== true) { header("location: login.php"); exit; }
+$user_id = $_SESSION["user_id"]; $username = $_SESSION["username"];
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -16,81 +10,57 @@ $username = $_SESSION["username"];
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Our Private Nest 🌸</title>
     <style>
-        body { 
-            font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; 
-            background: #fff1f2; 
-            margin: 0; 
-            display: flex; 
-            justify-content: center; 
-            align-items: center; 
-            height: 100vh; 
-        }
-        .chat-container { 
-            width: 100%; 
-            max-width: 480px; 
-            height: 94vh; 
-            background: #ffffff; 
-            box-shadow: 0 16px 40px rgba(244, 63, 94, 0.15); 
-            border-radius: 32px; 
-            display: flex; 
-            flex-direction: column; 
-            overflow: hidden; 
-            border: 2px solid #ffe4e6; 
-            position: relative; 
-        }
+        body { font-family: 'Segoe UI', Roboto, sans-serif; background: #fff1f2; margin: 0; display: flex; justify-content: center; align-items: center; height: 100vh; overflow: hidden; }
+        .chat-container { width: 100%; max-width: 460px; height: 94vh; background: #ffffff; box-shadow: 0 16px 40px rgba(244, 63, 94, 0.12); border-radius: 32px; display: flex; flex-direction: column; overflow: hidden; border: 2px solid #ffe4e6; position: relative; }
         
-        .chat-header { 
-            background: linear-gradient(135deg, #fba1b7, #ffd1da); 
-            color: #ff4d6d; 
-            padding: 18px 20px; 
-            text-align: center; 
-            font-size: 1.2rem; 
-            font-weight: bold; 
-            display: flex; 
-            justify-content: space-between; 
-            align-items: center;
-            border-bottom: 2px solid #ffe4e6;
-        }
-        
-        .btn-header-nav {
-            background: #ffffff; color: #ff4d6d; border: 1px solid #ffccd5; padding: 8px 14px; border-radius: 20px; cursor: pointer; font-weight: 700; font-size: 0.85rem; text-decoration: none; display: flex; align-items: center; gap: 4px; transition: all 0.2s ease;
-        }
+        .chat-header { background: linear-gradient(135deg, #fba1b7, #ffd1da); color: #ff4d6d; padding: 16px 20px; text-align: center; font-size: 1.15rem; font-weight: bold; display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #ffe4e6; }
+        .btn-header-nav { background: #ffffff; color: #ff4d6d; border: 1px solid #ffccd5; padding: 6px 14px; border-radius: 20px; cursor: pointer; font-weight: 700; font-size: 0.82rem; text-decoration: none; display: flex; align-items: center; transition: all 0.2s; }
         .btn-header-nav:hover { background: #fff5f6; transform: scale(1.05); }
 
-        .context-area {
-            background: #fff5f6; border-bottom: 1px dashed #ffccd5; padding: 10px 20px; display: flex; justify-content: space-between; align-items: center; font-size: 0.82rem; color: #ff758f; font-weight: 600;
-        }
-        .context-status { display: flex; align-items: center; gap: 6px; }
-        .status-dot { width: 8px; height: 8px; background: #f43f5e; border-radius: 50%; animation: pulseGlow 2s infinite; }
+        .context-area { background: #fff5f6; border-bottom: 1px dashed #ffccd5; padding: 10px 20px; display: flex; justify-content: space-between; align-items: center; font-size: 0.82rem; color: #ff758f; font-weight: 600; }
+        .status-dot { width: 8px; height: 8px; background: #f43f5e; border-radius: 50%; }
 
-        .chat-messages { flex: 1; padding: 20px; overflow-y: auto; background: #fffafb; display: flex; flex-direction: column; }
-        .message { margin-bottom: 6px; max-width: 75%; padding: 12px 16px; border-radius: 20px; font-size: 0.95rem; line-height: 1.4; word-wrap: break-word; box-shadow: 0 2px 6px rgba(0,0,0,0.01); cursor: pointer; position: relative; transition: transform 0.1s; }
-        .message:active { transform: scale(0.98); }
-        .message.sent { background: #ffe4e6; color: #a51d24; margin-left: auto; border-bottom-right-radius: 4px; align-self: flex-end; }
-        .message.received { background: #f1f5f9; color: #334155; margin-right: auto; border-bottom-left-radius: 4px; align-self: flex-start; }
+        .chat-messages { flex: 1; padding: 20px; overflow-y: auto; background: #fffafb; display: flex; flex-direction: column; position: relative; }
+        .message { padding: 12px 16px; border-radius: 20px; font-size: 0.95rem; line-height: 1.4; word-wrap: break-word; box-shadow: 0 2px 5px rgba(0,0,0,0.01); max-width: 70%; position: relative; }
+        .message.sent { background: #ffe4e6; color: #a51d24; border-bottom-right-radius: 4px; }
+        .message.received { background: #f1f5f9; color: #334155; border-bottom-left-radius: 4px; }
         
-        /* Reply Floating Dock Preview Layer */
-        #reply-preview-box { display: none; background: #fff5f6; border-top: 1px solid #ffccd5; padding: 8px 20px; justify-content: space-between; align-items: center; font-size: 0.85rem; color: #ff4d6d; font-weight: 600; }
+        /* Compact 3-Dots Button Style */
+        .three-dots-btn { background: none; border: none; color: #cbc0c3; cursor: pointer; font-size: 1.2rem; padding: 0 4px; border-radius: 50%; transition: color 0.2s; display: flex; align-items: center; justify-content: center; }
+        .three-dots-btn:hover { color: #ff758f; background: #fff1f2; }
 
-        .chat-input-area { padding: 15px; background: #ffffff; display: flex; gap: 12px; align-items: center; border-top: 1px solid #ffe4e6; }
+        /* Floating Mini Dropdown Menu Layout */
+        .action-popup-menu { display: none; position: absolute; background: white; border: 1px solid #ffe4e6; border-radius: 14px; box-shadow: 0 8px 24px rgba(0,0,0,0.08); z-index: 100; min-width: 110px; overflow: hidden; animation: popIn 0.15s ease-out; }
+        @keyframes popIn { from { transform: scale(0.9); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+        .menu-item { padding: 10px 14px; font-size: 0.85rem; color: #475569; cursor: pointer; font-weight: 600; text-align: left; transition: background 0.2s; }
+        .menu-item:hover { background: #fff5f6; color: #ff4d6d; }
+        .menu-item.item-delete { color: #dc2626; }
+        .menu-item.item-delete:hover { background: #fef2f2; }
+
+        /* Top Dock Notification Panels */
+        #reply-preview-box { display: none; background: #fff5f6; border-top: 1px solid #ffccd5; padding: 8px 20px; justify-content: space-between; align-items: center; font-size: 0.85rem; color: #ff4d6d; font-weight: 600; }
+        #edit-preview-box { display: none; background: #f0fdf4; border-top: 1px solid #bbf7d0; padding: 8px 20px; justify-content: space-between; align-items: center; font-size: 0.85rem; color: #16a34a; font-weight: 600; }
+
+        .chat-input-area { padding: 15px; background: #ffffff; display: flex; gap: 10px; align-items: center; border-top: 1px solid #ffe4e6; }
         .chat-input { flex: 1; padding: 14px 20px; border: 2px solid #fff0f2; background: #fffcfd; border-radius: 30px; outline: none; font-size: 0.95rem; }
         
-        .btn-action-circle { border: none; width: 46px; height: 46px; border-radius: 50%; cursor: pointer; display: flex; justify-content: center; align-items: center; font-size: 1.2rem; color: white; transition: transform 0.1s ease, background 0.2s; }
-        .btn-action-circle:active { transform: scale(0.92); }
-        .btn-send { background: #ff758f; } 
-        .btn-mic { background: #c084fc; }  
-        .btn-mic.recording { background: #f43f5e; animation: pulseGlow 1.2s infinite; }
+        .btn-action-circle { border: none; width: 44px; height: 44px; border-radius: 50%; cursor: pointer; display: flex; justify-content: center; align-items: center; font-size: 1.15rem; color: white; transition: background 0.2s; }
+        .btn-send { background: #ff758f; } .btn-send:hover { background: #ff4d6d; }
+        .btn-mic { background: #c084fc; }  .btn-mic.recording { background: #f43f5e; }
         
+        /* Floating Emojis Elements Canvas styles */
+        .falling-emoji { position: absolute; pointer-events: none; font-size: 24px; animation: floatUpAndFade 1.2s ease-out forwards; z-index: 1000; }
+        @keyframes floatUpAndFade { 0% { transform: translateY(0) scale(0.5); opacity: 1; } 100% { transform: translateY(-80px) scale(1.2); opacity: 0; } }
+
+        /* Fullscreen WebRTC Interface overlay styles */
         .video-overlay { display: none; position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: #1c0a10; z-index: 9999; flex-direction: column; }
         .video-viewports { flex: 1; position: relative; display: flex; flex-direction: column; width: 100%; height: 100%; }
         .video-box { flex: 1; width: 100%; background: #2d121c; position: relative; display: flex; justify-content: center; align-items: center; overflow: hidden; }
         .video-box video { width: 100%; height: 100%; object-fit: cover; }
-        .video-label { position: absolute; bottom: 15px; left: 15px; background: rgba(0, 0, 0, 0.5); color: white; padding: 4px 12px; border-radius: 12px; font-size: 0.8rem; font-weight: bold; }
-        .video-controls { padding: 25px; display: flex; justify-content: center; background: linear-gradient(to top, #1c0a10, transparent); position: absolute; bottom: 0; left: 0; width: 100%; box-sizing: border-box; z-index: 10; }
+        .video-label { position: absolute; bottom: 15px; left: 15px; background: rgba(0, 0, 0, 0.5); color: white; padding: 4px 12px; border-radius: 12px; font-size: 0.8rem; }
+        .video-controls { padding: 25px; display: flex; justify-content: center; position: absolute; bottom: 0; left: 0; width: 100%; box-sizing: border-box; }
         .btn-hangup { background: #f43f5e; color: white; border: none; padding: 14px 40px; border-radius: 30px; font-weight: bold; cursor: pointer; }
-
-        audio { max-width: 100%; margin-top: 4px; border-radius: 8px; }
-        @keyframes pulseGlow { 0% { transform: scale(1); } 50% { transform: scale(1.05); } 100% { transform: scale(1); } }
+        audio { max-width: 100%; margin-top: 4px; }
     </style>
 </head>
 <body>
@@ -110,11 +80,15 @@ $username = $_SESSION["username"];
         <div>🌸 Secure Sync Active</div>
     </div>
     
-    <div class="chat-messages" id="chat-box"></div>
+    <div class="chat-messages" id="chat-box" onclick="closeAllMenus()"></div>
     
     <div id="reply-preview-box">
-        <span id="reply-preview-text">Replying to message...</span>
-        <span onclick="cancelReplyMode()" style="cursor:pointer; font-weight:bold; color:#94a3b8; padding:0 6px;">✖</span>
+        <span id="reply-preview-text">Replying...</span>
+        <span onclick="cancelReplyMode()" style="cursor:pointer; font-weight:bold; color:#ff4d6d;">✖</span>
+    </div>
+    <div id="edit-preview-box">
+        <span id="edit-preview-text">Editing message...</span>
+        <span onclick="cancelEditMode()" style="cursor:pointer; font-weight:bold; color:#16a34a;">✖</span>
     </div>
 
     <div class="chat-input-area">
@@ -126,18 +100,10 @@ $username = $_SESSION["username"];
 
 <div class="video-overlay" id="video-overlay-pane">
     <div class="video-viewports">
-        <div class="video-box">
-            <video id="remote-video" autoplay playsinline></video>
-            <div class="video-label">Her Camera ✨</div>
-        </div>
-        <div class="video-box" style="border-top: 2px solid #ffccd5;">
-            <video id="local-video" autoplay playsinline muted></video>
-            <div class="video-label">Your Camera (You)</div>
-        </div>
+        <div class="video-box"><video id="remote-video" autoplay playsinline></video><div class="video-label">Her Camera ✨</div></div>
+        <div class="video-box" style="border-top: 2px solid #ffccd5;"><video id="local-video" autoplay playsinline muted></video><div class="video-label">Your Camera</div></div>
     </div>
-    <div class="video-controls">
-        <button class="btn-hangup" id="hangup-btn">🎀 End Call</button>
-    </div>
+    <div class="video-controls"><button class="btn-hangup" id="hangup-btn">🎀 End Call</button></div>
 </div>
 
 <script>
@@ -146,127 +112,163 @@ $username = $_SESSION["username"];
     const sendBtn = document.getElementById('send-btn');
     const replyPreviewBox = document.getElementById('reply-preview-box');
     const replyPreviewText = document.getElementById('reply-preview-text');
+    const editPreviewBox = document.getElementById('edit-preview-box');
+    const editPreviewText = document.getElementById('edit-preview-text');
 
     let currentReplyToId = null;
+    let currentEditMsgId = null;
+    let totalMessagesCachedCount = 0;
 
     function scrollToBottom() { chatBox.scrollTop = chatBox.scrollHeight; }
 
-    // 1. DYNAMIC REPLIES AND MESSAGE DESPATCH ENGINE
-    function toggleMessageActions(msgId) {
-        const panel = document.getElementById(`actions-${msgId}`);
-        panel.style.display = (panel.style.display === 'none' || panel.style.display === '') ? 'flex' : 'none';
+    // 1. POPUP DROPDOWN ACTIONS HANDLERS 
+    function toggleMenu(event, msgId) {
+        event.stopPropagation();
+        closeAllMenus();
+        const menu = document.getElementById(`menu-${msgId}`);
+        menu.style.display = 'block';
+        
+        // Dynamic alignment boundaries calculations
+        const rect = event.target.getBoundingClientRect();
+        const containerRect = chatBox.getBoundingClientRect();
+        menu.style.top = `${rect.bottom - containerRect.top + chatBox.scrollTop}px`;
+        menu.style.left = `${rect.left - containerRect.left - 50}px`;
     }
 
-    function setReplyMode(msgId, text, type) {
+    function closeAllMenus() {
+        document.querySelectorAll('.action-popup-menu').forEach(m => m.style.display = 'none');
+    }
+
+    // 2. DISPATCH (SEND, EDIT, & REPLY MATRICES)
+    function triggerReply(msgId, text, type) {
+        cancelEditMode();
         currentReplyToId = msgId;
-        const displaySnippet = (type === 'voice') ? "🎙️ Voice Note" : text;
-        replyPreviewText.innerText = `Replying to: "${displaySnippet}"`;
+        replyPreviewText.innerText = `Replying to: "${type === 'voice' ? '🎙️ Voice Note' : text}"`;
         replyPreviewBox.style.display = 'flex';
         textInput.focus();
     }
 
-    function cancelReplyMode() {
-        currentReplyToId = null;
-        replyPreviewBox.style.display = 'none';
+    function cancelReplyMode() { currentReplyToId = null; replyPreviewBox.style.display = 'none'; }
+
+    function triggerEdit(msgId, currentText) {
+        cancelReplyMode();
+        currentEditMsgId = msgId;
+        editPreviewText.innerText = `Editing: "${currentText}"`;
+        editPreviewBox.style.display = 'flex';
+        textInput.value = currentText;
+        textInput.focus();
     }
 
-    async function sendMessage() {
+    function cancelEditMode() { currentEditMsgId = null; editPreviewBox.style.display = 'none'; textInput.value = ""; }
+
+    async function triggerDelete(msgId) {
+        if (!confirm("Delete this message for everyone? 🌸")) return;
+        await fetch('delete_message.php', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ message_id: msgId }) });
+        refreshChatWorkspace();
+    }
+
+    async function handleDispatchedMessage() {
         const text = textInput.value.trim();
         if (text === "") return;
-        textInput.value = "";
 
-        const payload = { message_content: text, reply_to_id: currentReplyToId };
-        cancelReplyMode();
-
-        try {
+        if (currentEditMsgId) {
+            // Edit Delivery Pipeline
+            await fetch('edit_message.php', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ message_id: currentEditMsgId, new_content: text })
+            });
+            cancelEditMode();
+        } else {
+            // New Delivery Pipeline
             await fetch('send_message.php', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(payload)
+                body: JSON.stringify({ message_content: text, reply_to_id: currentReplyToId })
             });
-            refreshChatWorkspace();
-        } catch (err) { console.error(err); }
+            cancelReplyMode();
+        }
+        textInput.value = "";
+        refreshChatWorkspace();
     }
-    sendBtn.addEventListener('click', sendMessage);
-    textInput.addEventListener('keypress', (e) => { if (e.key === 'Enter') sendMessage(); });
+    sendBtn.addEventListener('click', handleDispatchedMessage);
+    textInput.addEventListener('keypress', (e) => { if (e.key === 'Enter') handleDispatchedMessage(); });
 
-    // 2. UN-SENDING / DELETE FOR ALL LOGIC
-    async function deleteMessageForAll(msgId) {
-        if (!confirm("Are you sure you want to delete this message for everyone? 🌸")) return;
-        try {
-            await fetch('delete_message.php', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ message_id: msgId })
-            });
-            refreshChatWorkspace();
-        } catch (err) { console.error(err); }
+    // 3. EMOJI CELEBRATION DISPATCH MATRIX
+    function launchEmojiCelebration() {
+        const sweetEmojis = ['💖', '💕', '🌸', '✨', '👑', '🥰', '🎈', '❤️', '🌹'];
+        for (let i = 0; i < 8; i++) {
+            setTimeout(() => {
+                const emo = document.createElement('div');
+                emo.classList.add('falling-emoji');
+                emo.innerText = sweetEmojis[Math.floor(Math.random() * sweetEmojis.length)];
+                emo.style.left = `${Math.random() * 80 + 10}%`;
+                emo.style.bottom = '10%';
+                chatBox.appendChild(emo);
+                setTimeout(() => emo.remove(), 1200);
+            }, i * 90);
+        }
     }
 
-    // 3. BACKGROUND CONTINUOUS FEED REFRESH
+    // 4. BACKGROUND FEED LOOP
     async function refreshChatWorkspace() {
         try {
             const response = await fetch('fetch_messages.php');
             const updatedHtml = await response.text();
-            const shouldScroll = (chatBox.scrollTop + chatBox.clientHeight >= chatBox.scrollHeight - 100);
-            chatBox.innerHTML = updatedHtml;
-            if (shouldScroll) { scrollToBottom(); }
+            
+            // Analyze node lengths to see if a brand new message entered the database room
+            const tempDiv = document.createElement('div');
+            tempDiv.innerHTML = updatedHtml;
+            const liveCount = tempDiv.querySelectorAll('.message-row').length;
+
+            if (liveCount > totalMessagesCachedCount) {
+                if (totalMessagesCachedCount !== 0) { launchEmojiCelebration(); } // Blast emojis on incoming items
+                totalMessagesCachedCount = liveCount;
+                chatBox.innerHTML = updatedHtml;
+                scrollToBottom();
+            } else {
+                const shouldScroll = (chatBox.scrollTop + chatBox.clientHeight >= chatBox.scrollHeight - 120);
+                chatBox.innerHTML = updatedHtml;
+                if (shouldScroll) { scrollToBottom(); }
+            }
         } catch (err) { }
     }
-    refreshChatWorkspace();
     setInterval(refreshChatWorkspace, 1500);
 
-    // 4. CROSS-PLATFORM MIC FIX FOR VOICENOTES (Supports Mobile Safaris & Chrome)
-    let mediaRecorder;
-    let audioChunks = [];
-    let isRecording = false;
+    // 5. SECURE HIGH-FIDELITY MIC CAPTURING MATRIX FOR VOICE NOTES
+    let mediaRecorder; let audioChunks = []; let isRecording = false;
     const micBtn = document.getElementById('mic-btn');
 
     micBtn.addEventListener('click', async () => {
         if (!isRecording) {
             try {
                 const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-                
-                // Audio container configuration matrix for cross-platform hardware
-                let options = { mimeType: 'audio/webm' };
-                if (!MediaRecorder.isTypeSupported('audio/webm')) {
-                    options = { mimeType: 'audio/aac' }; // iOS Fallback alternative container
-                }
+                let typeOptions = { mimeType: 'audio/webm' };
+                if (!MediaRecorder.isTypeSupported('audio/webm')) { typeOptions = { mimeType: 'audio/aac' }; }
 
-                mediaRecorder = new MediaRecorder(stream, options);
+                mediaRecorder = new MediaRecorder(stream, typeOptions);
                 audioChunks = [];
-                
                 mediaRecorder.ondataavailable = e => { if (e.data.size > 0) audioChunks.push(e.data); };
                 mediaRecorder.onstop = async () => {
-                    const audioBlob = new Blob(audioChunks, { type: options.mimeType });
+                    const audioBlob = new Blob(audioChunks, { type: typeOptions.mimeType });
                     const formData = new FormData();
                     formData.append('audio_data', audioBlob);
 
                     micBtn.innerText = "⏳";
-                    const response = await fetch('upload_voice.php', { method: 'POST', body: formData });
-                    const result = await response.json();
-                    if (result.status === 'success') { refreshChatWorkspace(); }
+                    const resp = await fetch('upload_voice.php', { method: 'POST', body: formData });
+                    const res = await resp.json();
+                    if (res.status === 'success') { refreshChatWorkspace(); }
                     micBtn.innerText = "🎙️";
-                    
-                    // Kill microphone stream actively to clean up device hardware recording flags
-                    stream.getTracks().forEach(track => track.stop());
+                    stream.getTracks().forEach(t => t.stop());
                 };
-                
                 mediaRecorder.start(250);
-                isRecording = true;
-                micBtn.classList.add('recording');
-                micBtn.innerText = "🛑";
-            } catch (err) { alert("Microphone check failure. Ensure you are browsing via a Secure HTTPS ngrok Link!"); }
-        } else {
-            mediaRecorder.stop();
-            isRecording = false;
-            micBtn.classList.remove('recording');
-        }
+                isRecording = true; micBtn.classList.add('recording'); micBtn.innerText = "🛑";
+            } catch (err) { alert("Microphone blocked. Ensure you run this inside an HTTPS ngrok url link!"); }
+        } else { mediaRecorder.stop(); isRecording = false; micBtn.classList.remove('recording'); }
     });
 
-    // 5. WEBRTC LIVE VIDEO SIGNALLING VIEWPORTS SETUP
-    let localStream;
-    let peerConnection;
+    // 6. WEBRTC CONNECTIVITY ENGINE 
+    let localStream; let peerConnection;
     const videoOverlay = document.getElementById('video-overlay-pane');
     const localVideo = document.getElementById('local-video');
     const remoteVideo = document.getElementById('remote-video');
@@ -278,23 +280,17 @@ $username = $_SESSION["username"];
         videoOverlay.style.display = 'flex';
         localStream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
         localVideo.srcObject = localStream;
-        
         peerConnection = new RTCPeerConnection(rtcConfig);
         localStream.getTracks().forEach(track => peerConnection.addTrack(track, localStream));
         peerConnection.ontrack = e => { if (remoteVideo.srcObject !== e.streams[0]) remoteVideo.srcObject = e.streams[0]; };
         peerConnection.onicecandidate = e => { if (e.candidate) sendSignal('ice_candidate', e.candidate); };
-
         const offer = await peerConnection.createOffer();
         await peerConnection.setLocalDescription(offer);
         sendSignal('offer', offer);
     });
 
     async function sendSignal(type, payload) {
-        await fetch('signal.php?action=send', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ type: type, payload: payload })
-        });
+        await fetch('signal.php?action=send', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ type: type, payload: payload }) });
     }
 
     async function checkIncomingSignals() {
@@ -307,29 +303,23 @@ $username = $_SESSION["username"];
                     videoOverlay.style.display = 'flex';
                     localStream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
                     localVideo.srcObject = localStream;
-                    
                     peerConnection = new RTCPeerConnection(rtcConfig);
                     localStream.getTracks().forEach(track => peerConnection.addTrack(track, localStream));
                     peerConnection.ontrack = e => { if (remoteVideo.srcObject !== e.streams[0]) remoteVideo.srcObject = e.streams[0]; };
                     peerConnection.onicecandidate = e => { if (e.candidate) sendSignal('ice_candidate', e.candidate); };
-
                     await peerConnection.setRemoteDescription(new RTCSessionDescription(data));
                     const answer = await peerConnection.createAnswer();
                     await peerConnection.setLocalDescription(answer);
                     sendSignal('answer', answer);
                 } else if (signal.type === 'answer' && peerConnection) {
-                    if (!peerConnection.currentRemoteDescription) {
-                        await peerConnection.setRemoteDescription(new RTCSessionDescription(data));
-                    }
+                    if (!peerConnection.currentRemoteDescription) { await peerConnection.setRemoteDescription(new RTCSessionDescription(data)); }
                 } else if (signal.type === 'ice_candidate' && peerConnection) {
                     try { await peerConnection.addIceCandidate(new RTCIceCandidate(data)); } catch (e) {}
-                } else if (signal.type === 'hangup') {
-                    closeCallSession(false);
-                }
+                } else if (signal.type === 'hangup') { closeCallSession(false); }
             }
         } catch (err) {}
     }
-    setInterval(checkIncomingSignals, 1500);
+    setInterval(checkIncomingSignals, 1600);
 
     function closeCallSession(notifyPartner = true) {
         if (notifyPartner) sendSignal('hangup', {});

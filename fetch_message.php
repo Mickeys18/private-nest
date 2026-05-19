@@ -8,7 +8,6 @@ if (!isset($_SESSION["loggedin"]) || $_SESSION["loggedin"] !== true) {
 $user_id = $_SESSION["user_id"];
 
 try {
-    // Fetch all messages and join with user data
     $stmt = $pdo->query("SELECT m.*, u.username, r.message_content AS reply_text, r.message_type AS reply_type 
                          FROM messages m 
                          JOIN users u ON m.sender_id = u.id 
@@ -25,43 +24,60 @@ try {
         $isMe = ($msg['sender_id'] == $user_id);
         $class = $isMe ? 'sent' : 'received';
         
-        echo "<div class='message-wrapper' style='display: flex; flex-direction: column; align-items: " . ($isMe ? 'flex-end' : 'flex-start') . ";' id='msg-wrap-" . $msg['id'] . "'>";
+        echo "<div class='message-row' data-msg-id='" . $msg['id'] . "' style='display: flex; flex-direction: column; align-items: " . ($isMe ? 'flex-end' : 'flex-start') . "; width: 100%; margin-bottom: 12px;'>";
         
-        // If message is deleted
         if ($msg['is_deleted'] == 1) {
-            echo "<div class='message " . $class . "' style='font-style: italic; opacity: 0.6; background: #f1f5f9; color: #94a3b8;'>🌸 This message was unsent</div>";
+            echo "<div class='message " . $class . "' style='font-style: italic; opacity: 0.5; background: #f1f5f9; color: #94a3b8;'>🌸 Message unsent</div>";
             echo "</div>";
             continue;
         }
 
-        echo "<div class='message " . $class . "' onclick='toggleMessageActions(" . $msg['id'] . ")'>";
+        // Layout Container wrapping Bubble + Three Dots Button
+        echo "<div style='display: flex; align-items: center; gap: 6px; width: 100%; justify-content: " . ($isMe ? 'flex-end' : 'flex-start') . "; position: relative;'>";
         
-        // Handle Reply Previews inside the bubble
-        if (!empty($msg['reply_to_id'])) {
-            $preview = ($msg['reply_type'] == 'voice') ? '🎙️ Voice Note' : htmlspecialchars($msg['reply_text']);
-            echo "<div style='background: rgba(0,0,0,0.05); padding: 6px 10px; border-left: 3px solid #ff758f; border-radius: 8px; font-size: 0.8rem; margin-bottom: 6px; color: #65a30d; max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;'>💭 $preview</div>";
+        if (!$isMe) {
+            echo "<button class='three-dots-btn' onclick='toggleMenu(event, " . $msg['id'] . ")'>⋮</button>";
         }
 
-        // Render Message Body content
+        echo "<div class='message " . $class . "' style='margin-bottom:0;'>";
+        
+        if (!empty($msg['reply_to_id'])) {
+            $preview = ($msg['reply_type'] == 'voice') ? '🎙️ Voice Note' : htmlspecialchars($msg['reply_text']);
+            echo "<div style='background: rgba(0,0,0,0.04); padding: 4px 8px; border-left: 2px solid #ff758f; border-radius: 6px; font-size: 0.78rem; margin-bottom: 4px; color: #db2777; max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;'>💭 $preview</div>";
+        }
+
         if ($msg['message_type'] == 'text') {
             echo htmlspecialchars($msg['message_content']);
         } elseif ($msg['message_type'] == 'voice') {
             echo "<audio src='" . htmlspecialchars($msg['message_content']) . "' controls preload='metadata'></audio>";
         }
+
+        if ($msg['is_edited'] == 1 && $msg['message_type'] == 'text') {
+            echo "<span style='font-size: 0.65rem; opacity: 0.6; display: block; text-align: right; margin-top: 2px;'>✏️ edited</span>";
+        }
         
         echo "</div>";
 
-        // Real-time Action Toolbar (Reply & Delete Options)
-        echo "<div class='msg-actions' id='actions-" . $msg['id'] . "' style='display:none; margin: -10px 10px 10px 10px; gap: 8px;'>";
-        echo "<span onclick='setReplyMode(" . $msg['id'] . ", `" . htmlspecialchars(substr($msg['message_content'], 0, 30)) . "`, `" . $msg['message_type'] . "`)' style='font-size:0.75rem; color:#ff758f; cursor:pointer; font-weight:bold; background:#fff; padding: 2px 8px; border-radius:10px; border:1px solid #ffccd5;'>↩️ Reply</span>";
         if ($isMe) {
-            echo "<span onclick='deleteMessageForAll(" . $msg['id'] . ")' style='font-size:0.75rem; color:#f43f5e; cursor:pointer; font-weight:bold; background:#fff; padding: 2px 8px; border-radius:10px; border:1px solid #fecdd3;'>🗑️ Delete for All</span>";
+            echo "<button class='three-dots-btn' onclick='toggleMenu(event, " . $msg['id'] . ")'>⋮</button>";
+        }
+
+        // Inline Tiny Context Dropdown Menu Build
+        echo "<div class='action-popup-menu' id='menu-" . $msg['id'] . "'>";
+        echo "<div class='menu-item' onclick='triggerReply(" . $msg['id'] . ", `" . htmlspecialchars(substr($msg['message_content'], 0, 30)) . "`, `" . $msg['message_type'] . "`)'>↩️ Reply</div>";
+        
+        if ($isMe && $msg['message_type'] == 'text') {
+            echo "<div class='menu-item' onclick='triggerEdit(" . $msg['id'] . ", `" . htmlspecialchars($msg['message_content']) . "`)'>✏️ Edit</div>";
+        }
+        if ($isMe) {
+            echo "<div class='menu-item item-delete' onclick='triggerDelete(" . $msg['id'] . ")'>🗑️ Unsend</div>";
         }
         echo "</div>";
-        
-        echo "</div>";
+
+        echo "</div>"; // End Flex Wrap
+        echo "</div>"; // End Row
     }
 } catch (PDOException $e) {
-    echo "<div style='color:red; text-align:center;'>Sync error...</div>";
+    echo "Sync disruption...";
 }
 ?>

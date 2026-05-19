@@ -29,7 +29,6 @@ try {
     }
 
     foreach ($messages as $msg) {
-        // Enforce integer casting to prevent type-matching mismatches
         $isMe = (intval($msg['sender_id']) === $user_id);
         $wrapperClass = $isMe ? 'sent-wrapper' : 'received-wrapper';
         $bubbleClass = $isMe ? 'sent-bubble' : 'received-bubble';
@@ -45,12 +44,10 @@ try {
 
         echo "<div class='bubble-container'>";
         
-        // Prepare safe plain text representations for JavaScript click handlers
         $safeContent = str_replace(["\r", "\n"], " ", addslashes(htmlspecialchars($msg['message_content'], ENT_QUOTES, 'UTF-8')));
         $previewContent = substr($safeContent, 0, 25);
 
         if (!$isMe) {
-            // Incoming partner message structure
             echo "<div class='message-bubble " . $bubbleClass . "'>";
             if (!empty($msg['reply_to_id'])) {
                 $preview = ($msg['reply_type'] == 'voice') ? '🎙️ Voice Note' : htmlspecialchars($msg['reply_text']);
@@ -66,7 +63,6 @@ try {
             
             echo "<button class='three-dots-trigger' onclick='toggleMenu(event, " . $msg['id'] . ")'>⋮</button>";
         } else {
-            // Outgoing self message structure
             echo "<button class='three-dots-trigger' onclick='toggleMenu(event, " . $msg['id'] . ")'>⋮</button>";
 
             echo "<div class='message-bubble " . $bubbleClass . "'>";
@@ -87,7 +83,6 @@ try {
             echo "</div>";
         }
 
-        // Action Menu Options Panel (Generates options relative to message context)
         echo "<div class='action-dropdown-list' id='menu-" . $msg['id'] . "'>";
         echo "<div class='dropdown-option' onclick='triggerReply(" . $msg['id'] . ", `" . $previewContent . "`, `" . $msg['message_type'] . "`)'>↩️ Reply</div>";
         

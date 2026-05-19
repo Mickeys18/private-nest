@@ -155,14 +155,17 @@ $user_id = $_SESSION["user_id"]; $username = $_SESSION["username"];
     const editPreviewBox = document.getElementById('edit-preview-box');
     const editPreviewText = document.getElementById('edit-preview-text');
 
+    // Keep your existing variables here...
     let currentReplyToId = null;
     let currentEditMsgId = null;
     let totalMessagesCachedCount = 0;
+    
+    // NEW TRACKER: Keeps the menu open during background refreshes
     let currentOpenMenuId = null; 
 
     function scrollToBottom() { chatBox.scrollTop = chatBox.scrollHeight; }
 
-    // 1. POPUP THREE DOTS MENU CONTROLS (Tracks open state perfectly)
+    // 1. POPUP THREE DOTS MENU CONTROLS (Updated to track open state)
     function toggleMenu(event, msgId) {
         event.stopPropagation();
         const menu = document.getElementById(`menu-${msgId}`);
@@ -174,13 +177,13 @@ $user_id = $_SESSION["user_id"]; $username = $_SESSION["username"];
         } else {
             closeAllMenus();
             menu.style.display = 'block';
-            currentOpenMenuId = msgId; 
+            currentOpenMenuId = msgId; // Remember this menu is open
         }
     }
 
     function closeAllMenus() {
         document.querySelectorAll('.action-dropdown-list').forEach(m => m.style.display = 'none');
-        currentOpenMenuId = null; 
+        currentOpenMenuId = null; // Clear tracking when clicking away
     }
 
     // 2. DISPATCH SUBMISSIONS (REPLY, EDIT & SEND)
@@ -245,7 +248,7 @@ $user_id = $_SESSION["user_id"]; $username = $_SESSION["username"];
         }
     }
 
-    // 4. BACKGROUND FEED REALTIME ENGINE (Locks state persistence during DOM re-writes)
+    // 4. BACKGROUND FEED REALTIME ENGINE (Updated to persist the menu)
     async function refreshChatWorkspace() {
         try {
             const response = await fetch('fetch_messages.php');
@@ -255,6 +258,7 @@ $user_id = $_SESSION["user_id"]; $username = $_SESSION["username"];
             tempDiv.innerHTML = updatedHtml;
             const liveCount = tempDiv.querySelectorAll('.bubble-container').length;
 
+            // Save the currently active open menu state before rendering updates
             const savedMenuId = currentOpenMenuId;
 
             if (liveCount > totalMessagesCachedCount) {
@@ -268,6 +272,7 @@ $user_id = $_SESSION["user_id"]; $username = $_SESSION["username"];
                 if (shouldScroll) { scrollToBottom(); }
             }
 
+            // RESTORE STATE: If a menu was open, make sure it stays visible after the update
             if (savedMenuId) {
                 const menu = document.getElementById(`menu-${savedMenuId}`);
                 if (menu) {
@@ -303,4 +308,76 @@ $user_id = $_SESSION["user_id"]; $username = $_SESSION["username"];
                     const res = await resp.json();
                     if (res.status === 'success') { refreshChatWorkspace(); }
                     micBtn.innerText = "🎙️";
-                    stream.getTracks().forEach(t => t.stop
+                    stream.getTracks().forEach(t => t.stop());
+                };
+                mediaRecorder.start(250);
+                isRecording = true; micBtn.classList.add('recording'); micBtn.innerText = "🛑";
+            } catch (err) { alert("Microphone access blocked. Check your connection protocol!"); }
+        } else { mediaRecorder.stop(); isRecording = false; micBtn.classList.remove('recording'); }
+    });
+
+    // 6. WEBRTC ENGINE SIGNALLING TERMINAL
+    let localStream; let peerConnection;
+    const videoOverlay = document.getElementById('video-overlay-pane');
+    const localVideo = document.getElementById('local-video');
+    const remoteVideo = document.getElementById('remote-video');
+    const startCallBtn = document.getElementById('call-start-btn');
+    const hangupBtn = document.getElementById('hangup-btn');
+    const rtcConfig = { iceServers: [{ urls: 'stun:stun.l.google.com:19302' }] };
+
+    startCallBtn.addEventListener('click', async () => {
+        videoOverlay.style.display = 'flex';
+        localStream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
+        localVideo.srcObject = localStream;
+        peerConnection = new RTCPeerConnection(rtcConfig);
+        localStream.getTracks().forEach(track => peerConnection.addTrack(track, localStream));
+        peerConnection.ontrack = e => { if (remoteVideo.srcObject !== e.streams[0]) remoteVideo.srcObject = e.streams[0]; };
+        peerConnection.onicecandidate = e => { if (e.candidate) sendSignal('ice_candidate', e.candidate); };
+        const offer = await peerConnection.createOffer();
+        await peerConnection.setLocalDescription(offer);
+        sendSignal('offer', offer);
+    });
+
+    async function sendSignal(type, payload) {
+        await fetch('signal.php?action=send', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ type: type, payload: payload }) });
+    }
+
+    async function checkIncomingSignals() {
+        try {
+            const response = await fetch('signal.php?action=fetch');
+            const signals = await response.json();
+            for (let signal of signals) {
+                const data = JSON.parse(signal.payload);
+                if (signal.type === 'offer' && !peerConnection) {
+                    videoOverlay.style.display = 'flex';
+                    localStream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
+                    localVideo.srcObject = localStream;
+                    peerConnection = new RTCPeerConnection(rtcConfig);
+                    localStream.getTracks().forEach(track => peerConnection.addTrack(track, localStream));
+                    peerConnection.ontrack = e => { if (remoteVideo.srcObject !== e.streams[0]) remoteVideo.srcObject = e.streams[0]; };
+                    peerConnection.onicecandidate = e => { if (e.candidate) sendSignal('ice_candidate', e.candidate); };
+                    await peerConnection.setRemoteDescription(new RTCSessionDescription(data));
+                    const answer = await peerConnection.createAnswer();
+                    await peerConnection.setLocalDescription(answer);
+                    sendSignal('answer', answer);
+                } else if (signal.type === 'answer' && peerConnection) {
+                    if (!peerConnection.currentRemoteDescription) { await peerConnection.setRemoteDescription(new RTCSessionDescription(data)); }
+                } else if (signal.type === 'ice_candidate' && peerConnection) {
+                    try { await peerConnection.addIceCandidate(new RTCIceCandidate(data)); } catch (e) {}
+                } else if (signal.type === 'hangup') { closeCallSession(false); }
+            }
+        } catch (err) {}
+    }
+    setInterval(checkIncomingSignals, 1600);
+
+    function closeCallSession(notifyPartner = true) {
+        if (notifyPartner) sendSignal('hangup', {});
+        if (peerConnection) { peerConnection.close(); peerConnection = null; }
+        if (localStream) { localStream.getTracks().forEach(track => track.stop()); localStream = null; }
+        videoOverlay.style.display = 'none';
+        fetch('signal.php?action=clear', { method: 'POST' });
+    }
+    hangupBtn.addEventListener('click', () => closeCallSession(true));
+</script>
+</body>
+</html>

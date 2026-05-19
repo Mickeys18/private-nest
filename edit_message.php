@@ -14,12 +14,12 @@ if (isset($inputData['message_id'], $inputData['new_content'])) {
     $user_id = $_SESSION["user_id"];
 
     if ($new_content === "") {
-        echo json_encode(["status" => "error", "message" => "Empty content"]);
+        echo json_encode(["status" => "error", "message" => "Empty message text"]);
         exit;
     }
 
     try {
-        $stmt = $pdo->prepare("UPDATE messages SET message_content = :content, is_edited = 1 WHERE id = :id AND sender_id = :sender_id AND is_deleted = 0");
+        $stmt = $pdo->prepare("UPDATE messages SET message_content = :content, is_edited = 1 WHERE id = :id AND sender_id = :sender_id");
         $stmt->execute([
             ':content' => $new_content,
             ':id' => $msg_id,

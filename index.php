@@ -10,49 +10,67 @@ $user_id = $_SESSION["user_id"]; $username = $_SESSION["username"];
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Our Private Nest 🌸</title>
     <style>
-        body { font-family: 'Segoe UI', Roboto, sans-serif; background: #fff1f2; margin: 0; display: flex; justify-content: center; align-items: center; height: 100vh; overflow: hidden; }
-        .chat-container { width: 100%; max-width: 460px; height: 94vh; background: #ffffff; box-shadow: 0 16px 40px rgba(244, 63, 94, 0.12); border-radius: 32px; display: flex; flex-direction: column; overflow: hidden; border: 2px solid #ffe4e6; position: relative; }
+        body { font-family: 'Segoe UI', Roboto, Helvetica, sans-serif; background: #fff1f2; margin: 0; display: flex; justify-content: center; align-items: center; height: 100vh; overflow: hidden; }
+        
+        .chat-container { width: 100%; max-width: 440px; height: 95vh; background: #ffffff; box-shadow: 0 20px 50px rgba(244, 63, 94, 0.15); border-radius: 36px; display: flex; flex-direction: column; overflow: hidden; border: 2px solid #ffe4e6; position: relative; }
         
         .chat-header { background: linear-gradient(135deg, #fba1b7, #ffd1da); color: #ff4d6d; padding: 16px 20px; text-align: center; font-size: 1.15rem; font-weight: bold; display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #ffe4e6; }
         .btn-header-nav { background: #ffffff; color: #ff4d6d; border: 1px solid #ffccd5; padding: 6px 14px; border-radius: 20px; cursor: pointer; font-weight: 700; font-size: 0.82rem; text-decoration: none; display: flex; align-items: center; transition: all 0.2s; }
-        .btn-header-nav:hover { background: #fff5f6; transform: scale(1.05); }
+        .btn-header-nav:hover { background: #fff5f6; transform: scale(1.04); }
 
         .context-area { background: #fff5f6; border-bottom: 1px dashed #ffccd5; padding: 10px 20px; display: flex; justify-content: space-between; align-items: center; font-size: 0.82rem; color: #ff758f; font-weight: 600; }
         .status-dot { width: 8px; height: 8px; background: #f43f5e; border-radius: 50%; }
 
-        .chat-messages { flex: 1; padding: 20px; overflow-y: auto; background: #fffafb; display: flex; flex-direction: column; position: relative; }
-        .message { padding: 12px 16px; border-radius: 20px; font-size: 0.95rem; line-height: 1.4; word-wrap: break-word; box-shadow: 0 2px 5px rgba(0,0,0,0.01); max-width: 70%; position: relative; }
-        .message.sent { background: #ffe4e6; color: #a51d24; border-bottom-right-radius: 4px; }
-        .message.received { background: #f1f5f9; color: #334155; border-bottom-left-radius: 4px; }
+        /* The Main Chat Room Canvas Feed styling */
+        .chat-messages { flex: 1; padding: 20px; overflow-y: auto; background: #fffbfb; display: flex; flex-direction: column; position: relative; }
         
-        /* Compact 3-Dots Button Style */
-        .three-dots-btn { background: none; border: none; color: #cbc0c3; cursor: pointer; font-size: 1.2rem; padding: 0 4px; border-radius: 50%; transition: color 0.2s; display: flex; align-items: center; justify-content: center; }
-        .three-dots-btn:hover { color: #ff758f; background: #fff1f2; }
+        /* Modern Structured WhatsApp/Telegram Aesthetic Rows */
+        .message-row { display: flex; width: 100%; position: relative; }
+        .sent-wrapper { justify-content: flex-end; }
+        .received-wrapper { justify-content: flex-start; }
 
-        /* Floating Mini Dropdown Menu Layout */
-        .action-popup-menu { display: none; position: absolute; background: white; border: 1px solid #ffe4e6; border-radius: 14px; box-shadow: 0 8px 24px rgba(0,0,0,0.08); z-index: 100; min-width: 110px; overflow: hidden; animation: popIn 0.15s ease-out; }
-        @keyframes popIn { from { transform: scale(0.9); opacity: 0; } to { transform: scale(1); opacity: 1; } }
-        .menu-item { padding: 10px 14px; font-size: 0.85rem; color: #475569; cursor: pointer; font-weight: 600; text-align: left; transition: background 0.2s; }
-        .menu-item:hover { background: #fff5f6; color: #ff4d6d; }
-        .menu-item.item-delete { color: #dc2626; }
-        .menu-item.item-delete:hover { background: #fef2f2; }
+        .bubble-container { display: flex; align-items: center; gap: 8px; max-width: 80%; position: relative; margin-bottom: 4px; }
+        .sent-wrapper .bubble-container { flex-direction: row; }
+        .received-wrapper .bubble-container { flex-direction: row; }
 
-        /* Top Dock Notification Panels */
+        /* Elegant Bubbly Sweetheart Interface Styling */
+        .message-bubble { padding: 12px 16px; border-radius: 22px; font-size: 0.95rem; line-height: 1.4; word-wrap: break-word; box-shadow: 0 3px 8px rgba(244,63,94,0.04); display: inline-block; position: relative; }
+        .sent-bubble { background: #ffe4e6; color: #881337; border-bottom-right-radius: 4px; }
+        .received-bubble { background: #f1f5f9; color: #1e293b; border-bottom-left-radius: 4px; }
+        .deleted-bubble { font-style: italic; opacity: 0.5; background: #f8fafc !important; color: #94a3b8 !important; border-radius: 12px !important; }
+
+        /* Inline Timestamp Metas */
+        .bubble-meta { display: flex; justify-content: flex-end; align-items: center; gap: 4px; font-size: 0.68rem; margin-top: 5px; opacity: 0.7; font-weight: 500; }
+        .sent-bubble .bubble-meta { color: #9d174d; }
+        .received-bubble .bubble-meta { color: #64748b; }
+
+        .reply-line { background: rgba(0,0,0,0.04); padding: 5px 8px; border-left: 2px solid #ff758f; border-radius: 6px; font-size: 0.78rem; margin-bottom: 5px; color: #be185d; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+        /* 3-Dots Action Button (Perfect Alignment visibility toggle) */
+        .three-dots-trigger { background: none; border: none; color: #fda4af; cursor: pointer; font-size: 1.2rem; padding: 4px 8px; border-radius: 50%; display: flex; align-items: center; justify-content: center; transition: all 0.2s; }
+        .three-dots-trigger:hover { color: #ff4d6d; background: #fff1f2; }
+
+        /* Dynamic Popover Dropdown Styling Panels */
+        .action-dropdown-list { display: none; position: absolute; background: #ffffff; border: 1px solid #ffe4e6; border-radius: 16px; box-shadow: 0 10px 25px rgba(244,63,94,0.1); z-index: 999; min-width: 110px; overflow: hidden; }
+        .dropdown-option { padding: 10px 14px; font-size: 0.85rem; color: #475569; cursor: pointer; font-weight: 600; text-align: left; transition: background 0.2s; }
+        .dropdown-option:hover { background: #fff5f6; color: #ff4d6d; }
+        .dropdown-option.option-unsend { color: #dc2626; border-top: 1px solid #f1f5f9; }
+        .dropdown-option.option-unsend:hover { background: #fef2f2; }
+
+        /* Sub-navigation Headers Tracking boxes */
         #reply-preview-box { display: none; background: #fff5f6; border-top: 1px solid #ffccd5; padding: 8px 20px; justify-content: space-between; align-items: center; font-size: 0.85rem; color: #ff4d6d; font-weight: 600; }
         #edit-preview-box { display: none; background: #f0fdf4; border-top: 1px solid #bbf7d0; padding: 8px 20px; justify-content: space-between; align-items: center; font-size: 0.85rem; color: #16a34a; font-weight: 600; }
 
         .chat-input-area { padding: 15px; background: #ffffff; display: flex; gap: 10px; align-items: center; border-top: 1px solid #ffe4e6; }
         .chat-input { flex: 1; padding: 14px 20px; border: 2px solid #fff0f2; background: #fffcfd; border-radius: 30px; outline: none; font-size: 0.95rem; }
         
-        .btn-action-circle { border: none; width: 44px; height: 44px; border-radius: 50%; cursor: pointer; display: flex; justify-content: center; align-items: center; font-size: 1.15rem; color: white; transition: background 0.2s; }
+        .btn-action-circle { border: none; width: 44px; height: 44px; border-radius: 50%; cursor: pointer; display: flex; justify-content: center; align-items: center; font-size: 1.15rem; color: white; }
         .btn-send { background: #ff758f; } .btn-send:hover { background: #ff4d6d; }
-        .btn-mic { background: #c084fc; }  .btn-mic.recording { background: #f43f5e; }
+        .btn-mic { background: #c084fc; }  .btn-mic.recording { background: #f43f5e; animation: pulseGlow 1s infinite; }
         
-        /* Floating Emojis Elements Canvas styles */
-        .falling-emoji { position: absolute; pointer-events: none; font-size: 24px; animation: floatUpAndFade 1.2s ease-out forwards; z-index: 1000; }
-        @keyframes floatUpAndFade { 0% { transform: translateY(0) scale(0.5); opacity: 1; } 100% { transform: translateY(-80px) scale(1.2); opacity: 0; } }
+        .falling-emoji { position: absolute; pointer-events: none; font-size: 24px; animation: floatUp 1.2s ease-out forwards; z-index: 1000; }
+        @keyframes floatUp { 0% { transform: translateY(0) scale(0.6); opacity: 1; } 100% { transform: translateY(-90px) scale(1.3); opacity: 0; } }
 
-        /* Fullscreen WebRTC Interface overlay styles */
         .video-overlay { display: none; position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: #1c0a10; z-index: 9999; flex-direction: column; }
         .video-viewports { flex: 1; position: relative; display: flex; flex-direction: column; width: 100%; height: 100%; }
         .video-box { flex: 1; width: 100%; background: #2d121c; position: relative; display: flex; justify-content: center; align-items: center; overflow: hidden; }
@@ -61,6 +79,7 @@ $user_id = $_SESSION["user_id"]; $username = $_SESSION["username"];
         .video-controls { padding: 25px; display: flex; justify-content: center; position: absolute; bottom: 0; left: 0; width: 100%; box-sizing: border-box; }
         .btn-hangup { background: #f43f5e; color: white; border: none; padding: 14px 40px; border-radius: 30px; font-weight: bold; cursor: pointer; }
         audio { max-width: 100%; margin-top: 4px; }
+        @keyframes pulseGlow { 0% { transform: scale(1); } 50% { transform: scale(1.05); } 100% { transform: scale(1); } }
     </style>
 </head>
 <body>
@@ -121,25 +140,26 @@ $user_id = $_SESSION["user_id"]; $username = $_SESSION["username"];
 
     function scrollToBottom() { chatBox.scrollTop = chatBox.scrollHeight; }
 
-    // 1. POPUP DROPDOWN ACTIONS HANDLERS 
+    // 1. POPUP THREE DOTS MENU CONTROLS
     function toggleMenu(event, msgId) {
         event.stopPropagation();
         closeAllMenus();
         const menu = document.getElementById(`menu-${msgId}`);
         menu.style.display = 'block';
         
-        // Dynamic alignment boundaries calculations
-        const rect = event.target.getBoundingClientRect();
+        const triggerRect = event.target.getBoundingClientRect();
         const containerRect = chatBox.getBoundingClientRect();
-        menu.style.top = `${rect.bottom - containerRect.top + chatBox.scrollTop}px`;
-        menu.style.left = `${rect.left - containerRect.left - 50}px`;
+        
+        // Lock menu placement directly underneath the 3-dots anchor element safely
+        menu.style.top = `${triggerRect.bottom - containerRect.top + chatBox.scrollTop}px`;
+        menu.style.left = `${triggerRect.left - containerRect.left - 40}px`;
     }
 
     function closeAllMenus() {
-        document.querySelectorAll('.action-popup-menu').forEach(m => m.style.display = 'none');
+        document.querySelectorAll('.action-dropdown-list').forEach(m => m.style.display = 'none');
     }
 
-    // 2. DISPATCH (SEND, EDIT, & REPLY MATRICES)
+    // 2. DISPATCH SUBMISSIONS (REPLY, EDIT & SEND)
     function triggerReply(msgId, text, type) {
         cancelEditMode();
         currentReplyToId = msgId;
@@ -147,7 +167,6 @@ $user_id = $_SESSION["user_id"]; $username = $_SESSION["username"];
         replyPreviewBox.style.display = 'flex';
         textInput.focus();
     }
-
     function cancelReplyMode() { currentReplyToId = null; replyPreviewBox.style.display = 'none'; }
 
     function triggerEdit(msgId, currentText) {
@@ -158,7 +177,6 @@ $user_id = $_SESSION["user_id"]; $username = $_SESSION["username"];
         textInput.value = currentText;
         textInput.focus();
     }
-
     function cancelEditMode() { currentEditMsgId = null; editPreviewBox.style.display = 'none'; textInput.value = ""; }
 
     async function triggerDelete(msgId) {
@@ -172,20 +190,10 @@ $user_id = $_SESSION["user_id"]; $username = $_SESSION["username"];
         if (text === "") return;
 
         if (currentEditMsgId) {
-            // Edit Delivery Pipeline
-            await fetch('edit_message.php', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ message_id: currentEditMsgId, new_content: text })
-            });
+            await fetch('edit_message.php', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ message_id: currentEditMsgId, new_content: text }) });
             cancelEditMode();
         } else {
-            // New Delivery Pipeline
-            await fetch('send_message.php', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ message_content: text, reply_to_id: currentReplyToId })
-            });
+            await fetch('send_message.php', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ message_content: text, reply_to_id: currentReplyToId }) });
             cancelReplyMode();
         }
         textInput.value = "";
@@ -194,7 +202,7 @@ $user_id = $_SESSION["user_id"]; $username = $_SESSION["username"];
     sendBtn.addEventListener('click', handleDispatchedMessage);
     textInput.addEventListener('keypress', (e) => { if (e.key === 'Enter') handleDispatchedMessage(); });
 
-    // 3. EMOJI CELEBRATION DISPATCH MATRIX
+    // 3. ENHANCED EMOJI CELEBRATION LAUNCHER MATRIX
     function launchEmojiCelebration() {
         const sweetEmojis = ['💖', '💕', '🌸', '✨', '👑', '🥰', '🎈', '❤️', '🌹'];
         for (let i = 0; i < 8; i++) {
@@ -203,26 +211,25 @@ $user_id = $_SESSION["user_id"]; $username = $_SESSION["username"];
                 emo.classList.add('falling-emoji');
                 emo.innerText = sweetEmojis[Math.floor(Math.random() * sweetEmojis.length)];
                 emo.style.left = `${Math.random() * 80 + 10}%`;
-                emo.style.bottom = '10%';
+                emo.style.bottom = '15%';
                 chatBox.appendChild(emo);
                 setTimeout(() => emo.remove(), 1200);
-            }, i * 90);
+            }, i * 95);
         }
     }
 
-    // 4. BACKGROUND FEED LOOP
+    // 4. BACKGROUND FEED REALTIME ENGINE
     async function refreshChatWorkspace() {
         try {
             const response = await fetch('fetch_messages.php');
             const updatedHtml = await response.text();
             
-            // Analyze node lengths to see if a brand new message entered the database room
             const tempDiv = document.createElement('div');
             tempDiv.innerHTML = updatedHtml;
-            const liveCount = tempDiv.querySelectorAll('.message-row').length;
+            const liveCount = tempDiv.querySelectorAll('.bubble-container').length;
 
             if (liveCount > totalMessagesCachedCount) {
-                if (totalMessagesCachedCount !== 0) { launchEmojiCelebration(); } // Blast emojis on incoming items
+                if (totalMessagesCachedCount !== 0) { launchEmojiCelebration(); } 
                 totalMessagesCachedCount = liveCount;
                 chatBox.innerHTML = updatedHtml;
                 scrollToBottom();
@@ -235,7 +242,7 @@ $user_id = $_SESSION["user_id"]; $username = $_SESSION["username"];
     }
     setInterval(refreshChatWorkspace, 1500);
 
-    // 5. SECURE HIGH-FIDELITY MIC CAPTURING MATRIX FOR VOICE NOTES
+    // 5. SECURE VOICE NOTES CORE EXTENSION
     let mediaRecorder; let audioChunks = []; let isRecording = false;
     const micBtn = document.getElementById('mic-btn');
 
@@ -263,11 +270,11 @@ $user_id = $_SESSION["user_id"]; $username = $_SESSION["username"];
                 };
                 mediaRecorder.start(250);
                 isRecording = true; micBtn.classList.add('recording'); micBtn.innerText = "🛑";
-            } catch (err) { alert("Microphone blocked. Ensure you run this inside an HTTPS ngrok url link!"); }
+            } catch (err) { alert("Microphone access blocked. Check your connection protocol!"); }
         } else { mediaRecorder.stop(); isRecording = false; micBtn.classList.remove('recording'); }
     });
 
-    // 6. WEBRTC CONNECTIVITY ENGINE 
+    // 6. WEBRTC ENGINE SIGNALLING TERMINAL
     let localStream; let peerConnection;
     const videoOverlay = document.getElementById('video-overlay-pane');
     const localVideo = document.getElementById('local-video');

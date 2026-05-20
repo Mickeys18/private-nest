@@ -6,58 +6,55 @@ require_once "config.php";
 header('Content-Type: application/json');
 
 if (!isset($_SESSION["loggedin"]) || $_SESSION["loggedin"] !== true) {
-    echo json_encode([]);
+    echo json_encode(["error" => "Unauthorized"]);
     exit;
 }
 
+$current_user_id = isset($_SESSION["user_id"]) ? $_SESSION["user_id"] : $_SESSION["id"];
+
 try {
-    // Inspect database column anatomy to survive structure variations safely
-    $meta = $pdo->query("SHOW COLUMNS FROM messages");
-    $columns = $meta->fetchAll(PDO::FETCH_COLUMN);
+    // 1. Update current user's last heartbeat activity timestamp
+    $updateHeartbeat = $pdo->prepare("UPDATE users SET last_activity = NOW() WHERE id = :uid");
+    $updateHeartbeat->execute([':uid' => $current_user_id]);
+
+    // 2. Mark incoming messages as read/seen
+    $markAsRead = $pdo->prepare("UPDATE messages SET is_read = 1 WHERE sender_id != :uid AND is_read = 0");
+    $markAsRead->execute([':uid' => $current_user_id]);
+
+    // 3. Determine if the other partner is currently online (active within past 60 seconds)
+    $statusStmt = $pdo->prepare("SELECT last_activity FROM users WHERE id != :uid LIMIT 1");
+    $statusStmt->execute([':uid' => $current_user_id]);
+    $partner = $statusStmt->fetch(PDO::FETCH_ASSOC);
     
-    // Auto-detect Sender Column Name
-    $senderCol = 'sender_id';
-    if (!in_array('sender_id', $columns)) {
-        if (in_array('user_id', $columns)) { $senderCol = 'user_id'; }
-        else { $senderCol = $columns[1]; } 
+    $isPartnerOnline = false;
+    if ($partner && $partner['last_activity']) {
+        $lastActiveTime = strtotime($partner['last_activity']);
+        if ((time() - $lastActiveTime) <= 60) {
+            $isPartnerOnline = true;
+        }
     }
-    
-    // Auto-detect Text Column Name
-    $textCol = 'message_text';
-    if (!in_array('message_text', $columns)) {
-        if (in_array('message', $columns)) { $textCol = 'message'; }
-        elseif (in_array('msg_text', $columns)) { $textCol = 'msg_text'; }
-        else { $textCol = $columns[2]; } 
-    }
 
-    // Auto-detect Reply Column Reference
-    $replyCol = in_array('reply_to_text', $columns) ? ', reply_to_text' : (in_array('reply_text', $columns) ? ", $columns[3] AS reply_to_text" : ", '' AS reply_to_text");
-
-    // Auto-detect Timestamp Column Name
-    $timeCol = null;
-    if (in_array('created_at', $columns)) { $timeCol = 'created_at'; }
-    elseif (in_array('timestamp', $columns)) { $timeCol = 'timestamp'; }
-    elseif (in_array('time', $columns)) { $timeCol = 'time'; }
-    
-    $timeSelect = $timeCol ? "DATE_FORMAT($timeCol, '%h:%i %p') AS stamp_time" : "'' AS stamp_time";
-
-    // Build absolute foolproof column mapping aliases 
+    // 4. Safely query columns to prevent parsing fallback text errors
     $sql = "SELECT id, 
-                   $senderCol AS sender_id, 
-                   $textCol AS message_text, 
-                   $textCol AS message 
-                   $replyCol,
-                   $timeSelect 
+                   sender_id, 
+                   message_text, 
+                   reply_to_text,
+                   is_read,
+                   DATE_FORMAT(created_at, '%h:%i %p') AS stamp_time 
             FROM messages 
             ORDER BY id ASC 
             LIMIT 150";
             
     $stmt = $pdo->prepare($sql);
     $stmt->execute();
+    $messages = $stmt->fetchAll(PDO::FETCH_ASSOC);
     
-    echo json_encode($stmt->fetchAll(PDO::FETCH_ASSOC));
+    // Package data together cleanly
+    echo json_encode([
+        "partner_online" => $isPartnerOnline,
+        "messages" => $messages
+    ]);
 } catch (PDOException $e) {
-    // Output structural fail log natively for debugging if needed
-    echo json_encode([["id" => 0, "sender_id" => 0, "message_text" => "System DB Read Fault: " . $e->getMessage(), "stamp_time" => "Error"]]);
+    echo json_encode(["error" => $e->getMessage()]);
 }
 ?>

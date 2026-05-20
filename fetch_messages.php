@@ -16,7 +16,7 @@ try {
     
     $senderCol = in_array('sender_id', $columns) ? 'sender_id' : (in_array('user_id', $columns) ? 'user_id' : $columns[1]);
     
-    // Scan structure mapping sequence
+    // Explicit structural mappings to ensure message texts print perfectly
     if (in_array('message_text', $columns)) { $textCol = 'message_text'; }
     elseif (in_array('message', $columns)) { $textCol = 'message'; }
     elseif (in_array('msg_text', $columns)) { $textCol = 'msg_text'; }
@@ -25,8 +25,8 @@ try {
     $timeCol = in_array('created_at', $columns) ? 'created_at' : (in_array('timestamp', $columns) ? 'timestamp' : null);
     $timeSelect = $timeCol ? "DATE_FORMAT($timeCol, '%h:%i %p') AS stamp_time" : "'' AS stamp_time";
 
-    // Forces selection return object arrays matching Javascript assignments
-    $sql = "SELECT id, $senderCol AS sender_id, $textCol AS message_text, $timeSelect FROM messages ORDER BY id ASC LIMIT 150";
+    // Select the key both as message_text and message for foolproof extraction
+    $sql = "SELECT id, $senderCol AS sender_id, $textCol AS message_text, $textCol AS message, $timeSelect FROM messages ORDER BY id ASC LIMIT 150";
     $stmt = $pdo->prepare($sql);
     $stmt->execute();
     

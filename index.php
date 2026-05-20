@@ -13,63 +13,105 @@ $current_user = isset($_SESSION["username"]) ? $_SESSION["username"] : "user";
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Our Private Nest 🌸</title>
+    <title>Our Private Space 💙</title>
     <style>
-        body { font-family: 'Segoe UI', Roboto, sans-serif; background: #fff1f2; margin: 0; display: flex; justify-content: center; align-items: center; height: 100vh; }
-        .chat-container { width: 100%; max-width: 450px; height: 90vh; background: #ffffff; box-shadow: 0 20px 50px rgba(244, 63, 94, 0.15); border-radius: 36px; display: flex; flex-direction: column; overflow: hidden; border: 2px solid #ffe4e6; position: relative; }
+        /* 🌌 NEW SLEEK BLUE & WHITE FADING GRADIENT BACKGROUND */
+        body { 
+            font-family: 'Segoe UI', Roboto, sans-serif; 
+            background: linear-gradient(135deg, #cfe2fe 0%, #f0f6ff 50%, #ffffff 100%); 
+            margin: 0; 
+            display: flex; 
+            justify-content: center; 
+            align-items: center; 
+            height: 100vh; 
+        }
         
-        .chat-header { background: #fff1f2; padding: 15px 20px; border-bottom: 2px dashed #fba1b7; display: flex; justify-content: space-between; align-items: center; }
-        .chat-header h2 { font-size: 1.1rem; color: #ff4d6d; margin: 0; font-weight: bold; }
+        .chat-container { 
+            width: 100%; 
+            max-width: 450px; 
+            height: 90vh; 
+            background: #ffffff; 
+            box-shadow: 0 20px 50px rgba(37, 99, 235, 0.12); 
+            border-radius: 32px; 
+            display: flex; 
+            flex-direction: column; 
+            overflow: hidden; 
+            border: 1px solid #dbeafe; 
+            position: relative; 
+        }
         
-        .status-bar { background: #fffcfd; padding: 6px 15px; border-bottom: 1px solid #ffe4e6; display: flex; justify-content: space-between; font-size: 0.75rem; color: #ff758f; font-weight: 500; }
+        /* Premium Soft Blue Header */
+        .chat-header { 
+            background: #f0f6ff; 
+            padding: 15px 20px; 
+            border-bottom: 2px dashed #bfdbfe; 
+            display: flex; 
+            justify-content: space-between; 
+            align-items: center; 
+        }
+        .chat-header h2 { font-size: 1.1rem; color: #1e40af; margin: 0; font-weight: bold; }
+        
+        .status-bar { 
+            background: #ffffff; 
+            padding: 8px 20px; 
+            border-bottom: 1px solid #e2e8f0; 
+            display: flex; 
+            justify-content: space-between; 
+            font-size: 0.8rem; 
+            color: #2563eb; 
+            font-weight: 500; 
+        }
         
         .chat-messages { flex: 1; padding: 20px; overflow-y: auto; background: #ffffff; display: flex; flex-direction: column; gap: 16px; }
-        .msg-wrapper { display: flex; flex-direction: column; max-width: 75%; }
+        .msg-wrapper { display: flex; flex-direction: column; max-width: 78%; }
         .msg-wrapper.me { align-self: flex-end; align-items: flex-end; }
         .msg-wrapper.her { align-self: flex-start; align-items: flex-start; }
         
-        .reply-context { font-size: 0.75rem; color: #2563eb; margin-bottom: 2px; font-style: italic; background: #eff6ff; padding: 2px 6px; border-radius: 6px; border-left: 2px solid #3b82f6; }
+        .reply-context { font-size: 0.75rem; color: #1d4ed8; margin-bottom: 3px; font-style: italic; background: #eff6ff; padding: 4px 8px; border-radius: 8px; border-left: 3px solid #3b82f6; }
         
-        .msg-bubble { padding: 12px 18px; border-radius: 22px; font-size: 0.95rem; word-break: break-word; box-shadow: 0 2px 5px rgba(0,0,0,0.02); }
-        .me .msg-bubble { background: #ff758f; color: white; border-bottom-right-radius: 4px; }
-        .her .msg-bubble { background: #fffcfd; color: #881337; border-bottom-left-radius: 4px; border: 1px solid #ffe4e6; }
+        /* Message Bubbles Palette */
+        .msg-bubble { padding: 12px 18px; border-radius: 20px; font-size: 0.95rem; word-break: break-word; box-shadow: 0 2px 6px rgba(37, 99, 235, 0.04); }
+        .me .msg-bubble { background: #2563eb; color: white; border-bottom-right-radius: 4px; }
+        .her .msg-bubble { background: #f8fafc; color: #1e3a8a; border-bottom-left-radius: 4px; border: 1px solid #e2e8f0; }
         
-        /* 🔵 BLUE & WHITE MINI MENUS */
-        .msg-meta-subbar { display: flex; width: 100%; justify-content: space-between; align-items: center; font-size: 0.7rem; margin-top: 4px; color: #60a5fa; }
-        .msg-actions { display: flex; gap: 10px; background: #eff6ff; padding: 3px 8px; border-radius: 12px; border: 1px solid #bfdbfe; }
+        /* Sleek Blue Action Bar Row */
+        .msg-meta-subbar { display: flex; width: 100%; justify-content: space-between; align-items: center; font-size: 0.7rem; margin-top: 5px; color: #93c5fd; }
+        .msg-actions { display: flex; gap: 10px; background: #eff6ff; padding: 3px 8px; border-radius: 12px; border: 1px solid #dbeafe; }
         .msg-actions span { cursor: pointer; font-weight: 600; color: #2563eb; }
         .msg-actions span:hover { color: #1d4ed8; text-decoration: underline; }
         
-        .receipt-mark { font-weight: bold; font-size: 0.75rem; }
-        .receipt-mark.seen { color: #3b82f6; } /* Blue double check for read */
+        .receipt-mark { font-weight: bold; font-size: 0.75rem; color: #94a3b8; }
+        .receipt-mark.seen { color: #3b82f6; } 
 
-        .reply-dock { background: #eff6ff; padding: 8px 15px; border-top: 1px solid #bfdbfe; display: none; justify-content: space-between; align-items: center; font-size: 0.8rem; color: #1e3a8a; }
-        .reply-dock span { cursor: pointer; font-weight: bold; background: #ffffff; padding: 2px 6px; border-radius: 4px; color: #dc2626; }
+        .reply-dock { background: #eff6ff; padding: 10px 18px; border-top: 1px solid #bfdbfe; display: none; justify-content: space-between; align-items: center; font-size: 0.8rem; color: #1e40af; }
+        .reply-dock span { cursor: pointer; font-weight: bold; background: #ffffff; padding: 2px 8px; border-radius: 6px; color: #ef4444; border: 1px solid #fee2e2; }
 
-        .chat-input-area { padding: 15px; background: #fffcfd; border-top: 1px solid #ffe4e6; display: flex; align-items: center; gap: 10px; }
-        .message-input { flex: 1; padding: 12px 20px; border: 2px solid #fff0f2; background: #fffcfd; border-radius: 30px; outline: none; font-size: 0.95rem; }
+        .chat-input-area { padding: 15px; background: #f8fafc; border-top: 1px solid #e2e8f0; display: flex; align-items: center; gap: 10px; }
+        .message-input { flex: 1; padding: 12px 20px; border: 1.5px solid #dbeafe; background: #ffffff; border-radius: 30px; outline: none; font-size: 0.95rem; color: #1e3a8a; }
+        .message-input:focus { border-color: #3b82f6; box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1); }
         
-        .btn { border: none; padding: 8px 14px; border-radius: 20px; font-weight: bold; font-size: 0.85rem; cursor: pointer; text-decoration: none; }
-        .btn-logout { background: #fff; color: #ff4d6d; border: 1px solid #fba1b7; }
-        .btn-call { background: #2563eb; color: #fff; box-shadow: 0 4px 10px rgba(37, 99, 235, 0.3); }
+        .btn { border: none; padding: 8px 16px; border-radius: 20px; font-weight: bold; font-size: 0.85rem; cursor: pointer; text-decoration: none; display: inline-flex; align-items: center; }
+        .btn-logout { background: #ffffff; color: #475569; border: 1px solid #cbd5e1; }
+        .btn-logout:hover { background: #f1f5f9; }
+        .btn-call { background: #2563eb; color: #ffffff; box-shadow: 0 4px 12px rgba(37, 99, 235, 0.25); }
+        .btn-call:hover { background: #1d4ed8; }
         
-        .btn-round { width: 42px; height: 42px; border-radius: 50%; display: flex; justify-content: center; align-items: center; border: none; cursor: pointer; color: white; }
-        .btn-mic { background: #a78bfa; font-size: 1.1rem; }
+        .btn-round { width: 42px; height: 42px; border-radius: 50%; display: flex; justify-content: center; align-items: center; border: none; cursor: pointer; color: white; transition: 0.2s; }
+        .btn-mic { background: #3b82f6; font-size: 1.1rem; }
         .btn-mic.recording { background: #ef4444; animation: pulse 1.5s infinite; }
-        .btn-send { background: #ff758f; font-size: 1.2rem; }
+        .btn-send { background: #2563eb; font-size: 1.2rem; }
+        .btn-send:hover { transform: scale(1.05); }
         
-        /* 🔵 BLUE & WHITE CALL MODAL */
-        .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(15, 23, 42, 0.6); justify-content: center; align-items: center; z-index: 999; backdrop-filter: blur(3px); }
-        .modal-content { background: #ffffff; padding: 25px; border-radius: 24px; text-align: center; width: 80%; max-width: 320px; box-shadow: 0 20px 40px rgba(0,0,0,0.2); border: 2px solid #bfdbfe; }
+        /* Call Modal Overlay Styling */
+        .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(15, 23, 42, 0.4); justify-content: center; align-items: center; z-index: 999; backdrop-filter: blur(4px); }
+        .modal-content { background: #ffffff; padding: 25px; border-radius: 24px; text-align: center; width: 80%; max-width: 320px; box-shadow: 0 25px 50px rgba(0,0,0,0.15); border: 1px solid #bfdbfe; }
         .modal-content h3 { margin-top: 0; color: #1e3a8a; font-size: 1.3rem; }
-        .modal-btn { display: block; width: 100%; padding: 14px; margin: 12px 0; border: none; border-radius: 14px; font-weight: bold; cursor: pointer; font-size: 1rem; transition: 0.2s; }
+        .modal-btn { display: block; width: 100%; padding: 14px; margin: 12px 0; border: none; border-radius: 14px; font-weight: bold; cursor: pointer; font-size: 1rem; }
         .btn-voice { background: #eff6ff; color: #2563eb; border: 1px solid #bfdbfe; }
-        .btn-voice:hover { background: #dbeafe; }
         .btn-video { background: #2563eb; color: #ffffff; }
-        .btn-video:hover { background: #1d4ed8; }
-        .btn-cancel { background: #f1f5f9; color: #64748b; margin-top: 20px; }
+        .btn-cancel { background: #f1f5f9; color: #64748b; margin-top: 15px; }
 
-        audio { max-width: 100%; margin-top: 4px; border-radius: 10px; }
+        audio { max-width: 100%; margin-top: 5px; border-radius: 12px; }
         @keyframes pulse { 0% { transform: scale(1); } 70% { transform: scale(1.05); } 100% { transform: scale(1); } }
     </style>
 </head>
@@ -78,13 +120,13 @@ $current_user = isset($_SESSION["username"]) ? $_SESSION["username"] : "user";
 <div class="chat-container">
     <div class="chat-header">
         <a href="logout.php" class="btn btn-logout">🚪 Logout</a>
-        <h2>Our Private Space 💕</h2>
+        <h2>Our Private Space 💙</h2>
         <button class="btn btn-call" id="callMenuBtn">📞 Call</button>
     </div>
     
     <div class="status-bar">
         <span>Hey <strong id="myNameDisplay"></strong> ✨</span>
-        <span id="partnerStatusText">⚪ Checking status...</span>
+        <span id="partnerStatusText">⚪ Status check...</span>
     </div>
 
     <div class="chat-messages" id="chatBox"></div>
@@ -97,14 +139,14 @@ $current_user = isset($_SESSION["username"]) ? $_SESSION["username"] : "user";
     <div class="chat-input-area">
         <button type="button" class="btn btn-round btn-mic" id="micBtn">🎙️</button>
         <input type="text" id="msgInput" class="message-input" placeholder="Type a message...">
-        <button id="sendBtn" class="btn btn-round btn-send">💝</button>
+        <button id="sendBtn" class="btn btn-round btn-send">💙</button>
     </div>
 </div>
 
 <div class="modal" id="callModal">
     <div class="modal-content">
-        <h3>Connect with Ryry 💙</h3>
-        <p style="font-size: 0.85rem; color: #64748b; margin-bottom: 20px;">Secure Private Line</p>
+        <h3>Connect with Ryry 📞</h3>
+        <p style="font-size: 0.85rem; color: #64748b; margin-bottom: 20px;">Encrypted Private Bridge Line</p>
         <button class="modal-btn btn-video" onclick="triggerCall(true)">📹 Start Video Call</button>
         <button class="modal-btn btn-voice" onclick="triggerCall(false)">🔊 Start Voice Call</button>
         <button class="modal-btn btn-cancel" id="closeModalBtn">Cancel</button>
@@ -128,7 +170,7 @@ $current_user = isset($_SESSION["username"]) ? $_SESSION["username"] : "user";
     const currentUserId = <?php echo json_encode($_SESSION["user_id"]); ?>;
     const rawUserName = <?php echo json_encode($_SESSION["username"]); ?>;
     
-    // Auto-detect names: If logged in as Mickey, partner is Ryry
+    // Dynamic naming allocation engine
     const myName = (rawUserName.toLowerCase() === 'mickey') ? 'Mickey' : 'Ryry';
     const partnerName = (myName === 'Mickey') ? 'Ryry' : 'Mickey';
     myNameDisplay.textContent = myName;
@@ -138,23 +180,20 @@ $current_user = isset($_SESSION["username"]) ? $_SESSION["username"] : "user";
     let audioChunks = [];
     let isRecording = false;
 
-    // Call Feature perfectly configured via Jitsi Meet Secure Bridge
     callMenuBtn.addEventListener('click', () => {
-        document.querySelector('.modal-content h3').textContent = "Connect with " + partnerName + " 💙";
+        document.querySelector('.modal-content h3').textContent = "Connect with " + partnerName + " 📞";
         callModal.style.display = 'flex';
     });
     closeModalBtn.addEventListener('click', () => callModal.style.display = 'none');
     
     function triggerCall(isVideo) {
         callModal.style.display = 'none';
-        // Creates a unique, secure URL just for Mickey and Ryry
         const roomName = "OurPrivateNest_MickeyAndRyry_2026";
         const url = `https://meet.jit.si/${roomName}#config.startWithVideoMuted=${!isVideo}`;
         window.open(url, '_blank');
         
-        // Auto-send a message letting them know you are calling
         const callType = isVideo ? "📹 Video" : "🔊 Voice";
-        dispatchMessage(`[SYSTEM] I am starting a ${callType} call! Join me here: ${url}`);
+        dispatchMessage(`[SYSTEM CALL] I initialized a ${callType} room! Join our link here: ${url}`);
     }
 
     cancelReplyBtn.addEventListener('click', () => {
@@ -168,13 +207,13 @@ $current_user = isset($_SESSION["username"]) ? $_SESSION["username"] : "user";
             .then(data => {
                 if (data.status === "error") return;
                 
-                // Live Connection Status
+                // Track online parameters
                 if (data.partner_online) {
                     partnerStatusText.innerHTML = "🟢 " + partnerName + " is online";
-                    partnerStatusText.style.color = "#3b82f6"; // Blue for online
+                    partnerStatusText.style.color = "#2563eb";
                 } else {
                     partnerStatusText.innerHTML = "⚪ " + partnerName + " is away";
-                    partnerStatusText.style.color = "#9ca3af";
+                    partnerStatusText.style.color = "#94a3b8";
                 }
 
                 const isAtBottom = chatBox.scrollHeight - chatBox.clientHeight <= chatBox.scrollTop + 60;
@@ -203,8 +242,7 @@ $current_user = isset($_SESSION["username"]) ? $_SESSION["username"] : "user";
                         audio.src = msg.message;
                         bubble.appendChild(audio);
                     } else if (msg.message.includes("https://meet.jit.si/")) {
-                        // Style Call Links specially
-                        bubble.innerHTML = msg.message.replace(/(https:\/\/[^\s]+)/g, "<a href='$1' target='_blank' style='color:#ffe4e6; text-decoration:underline; font-weight:bold;'>Click to Join Call</a>");
+                        bubble.innerHTML = msg.message.replace(/(https:\/\/[^\s]+)/g, "<a href='$1' target='_blank' style='color:#ffffff; text-decoration:underline; font-weight:bold; background:#1d4ed8; padding:4px 8px; border-radius:6px; display:inline-block; margin-top:5px;'>Join Active Call Room</a>");
                     } else {
                         bubble.textContent = msg.message;
                     }
@@ -238,7 +276,7 @@ $current_user = isset($_SESSION["username"]) ? $_SESSION["username"] : "user";
                         const receipt = document.createElement('div');
                         if (parseInt(msg.is_read) === 1) {
                             receipt.classList.add('receipt-mark', 'seen');
-                            receipt.innerHTML = "✓✓ Read"; // Updated to Read
+                            receipt.innerHTML = "✓✓ Read"; 
                         } else {
                             receipt.classList.add('receipt-mark');
                             receipt.innerHTML = "✓ Sent";
@@ -251,7 +289,7 @@ $current_user = isset($_SESSION["username"]) ? $_SESSION["username"] : "user";
                 });
                 
                 if (isAtBottom) chatBox.scrollTop = chatBox.scrollHeight;
-            });
+            }).catch(err => console.error("Polling drop intercepted safely:", err));
     }
 
     function executeAction(actionType, id) {
@@ -267,19 +305,26 @@ $current_user = isset($_SESSION["username"]) ? $_SESSION["username"] : "user";
         formData.append('message', finalMsg);
         
         fetch('insert_message.php', { method: 'POST', body: formData })
-        .then(() => {
-            msgInput.value = "";
-            activeReplyString = "";
-            replyDock.style.display = 'none';
-            fetchMessages();
-        }).finally(() => { msgInput.disabled = false; msgInput.focus(); });
+        .then(res => res.json())
+        .then(data => {
+            if (data.status === "success") {
+                msgInput.value = "";
+                activeReplyString = "";
+                replyDock.style.display = 'none';
+                fetchMessages();
+            } else {
+                alert("Database insertion rejected: " + data.message);
+            }
+        })
+        .catch(err => alert("Transmission line fault. Please check server connection."))
+        .finally(() => { msgInput.disabled = false; msgInput.focus(); });
     }
 
     sendBtn.addEventListener('click', () => { if(msgInput.value.trim() !== "") { msgInput.disabled = true; dispatchMessage(msgInput.value.trim()); }});
     msgInput.addEventListener('keypress', (e) => { if(e.key === 'Enter') sendBtn.click(); });
 
     fetchMessages();
-    setInterval(fetchMessages, 2500);
+    setInterval(fetchMessages, 2000);
 </script>
 </body>
 </html>

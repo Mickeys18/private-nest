@@ -1,9 +1,9 @@
 <?php
+// Force session parameters to be distinct per browser context
 if (session_status() === PHP_SESSION_NONE) {
     session_start();
 }
 
-// If already logged in, let them access index but don't force a single user context across new attempts
 require_once "config.php";
 
 $username = $password = "";
@@ -11,19 +11,18 @@ $username_err = $password_err = $login_err = "";
 
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
     if (empty(trim($_POST["username"]))) {
-        $username_err = "Please enter username.";
+        $username_err = "Please enter your royal name 👑";
     } else {
         $username = trim($_POST["username"]);
     }
     
     if (empty(trim($_POST["password"]))) {
-        $password_err = "Please enter your password.";
+        $password_err = "Please enter your secret password 🔑";
     } else {
         $password = trim($_POST["password"]);
     }
     
     if (empty($username_err) && empty($password_err)) {
-        // Adjust column query to grab details dynamically
         $sql = "SELECT id, username, password FROM users WHERE username = :username";
         
         if ($stmt = $pdo->prepare($sql)) {
@@ -36,10 +35,13 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                         $id = $row["id"];
                         $hashed_password = $row["password"];
                         
-                        // Supports both plain text testing and hashed passwords
+                        // Supports both plain text testing and hashed database values
                         if ($password === $hashed_password || password_verify($password, $hashed_password)) {
-                            // CLEAR OUT OLD HANDLES BEFORE RE-ASSIGNING
-                            $_SESSION = array();
+                            
+                            // CRITICAL FIX: Destroy completely any old session cookie footprint before rewriting
+                            session_unset();
+                            session_destroy();
+                            session_start();
                             
                             $_SESSION["loggedin"] = true;
                             $_SESSION["user_id"] = $id;
@@ -49,14 +51,14 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                             header("location: index.php");
                             exit;
                         } else {
-                            $login_err = "Invalid username or password.";
+                            $login_err = "Invalid password! Try again, love 💔";
                         }
                     }
                 } else {
-                    $login_err = "Invalid username or password.";
+                    $login_err = "Username not found in our nest 🕵️‍♂️";
                 }
             } else {
-                $login_err = "Oops! Something went wrong. Please try again later.";
+                $login_err = "Oops! Something went wrong with the database link ⚡";
             }
             unset($stmt);
         }
@@ -68,40 +70,109 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Login 💙</title>
+    <title>Our Private Space Login 🔑💙</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <style>
-        body { font-family: sans-serif; background: linear-gradient(135deg, #cfe2fe 0%, #f0f6ff 50%, #ffffff 100%); display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; }
-        .wrapper { width: 100%; max-width: 350px; padding: 30px; background: white; border-radius: 20px; box-shadow: 0 10px 30px rgba(37,99,235,0.1); border: 1px solid #dbeafe; }
-        h2 { color: #1e40af; text-align: center; margin-bottom: 20px; }
-        .form-group { margin-bottom: 15px; }
-        .form-group label { display: block; margin-bottom: 5px; color: #1e3a8a; font-weight: bold; font-size: 0.9rem; }
-        .form-control { width: 100%; padding: 10px; border: 1px solid #cbd5e1; border-radius: 10px; box-sizing: border-box; }
-        .btn-primary { width: 100%; padding: 12px; background: #2563eb; border: none; color: white; border-radius: 10px; font-weight: bold; cursor: pointer; margin-top: 10px; }
-        .error { color: #ef4444; font-size: 0.8rem; margin-top: 4px; }
+        body { 
+            font-family: 'Segoe UI', Roboto, sans-serif; 
+            background: linear-gradient(135deg, #cfe2fe 0%, #f0f6ff 50%, #ffffff 100%); 
+            display: flex; 
+            justify-content: center; 
+            align-items: center; 
+            height: 100vh; 
+            margin: 0; 
+        }
+        .wrapper { 
+            width: 100%; 
+            max-width: 360px; 
+            padding: 35px 30px; 
+            background: white; 
+            border-radius: 32px; 
+            box-shadow: 0 20px 50px rgba(37, 99, 235, 0.12); 
+            border: 1px solid #dbeafe; 
+            text-align: center;
+        }
+        .avatar-logo {
+            font-size: 3.5rem;
+            margin-bottom: 10px;
+            animation: float 3s ease-in-out infinite;
+        }
+        h2 { color: #1e40af; margin: 0 0 5px 0; font-size: 1.6rem; }
+        p { color: #64748b; font-size: 0.9rem; margin: 0 0 25px 0; }
+        
+        .form-group { margin-bottom: 20px; text-align: left; }
+        .form-group label { display: block; margin-bottom: 6px; color: #1e3a8a; font-weight: 600; font-size: 0.85rem; }
+        
+        .form-control { 
+            width: 100%; 
+            padding: 12px 16px; 
+            border: 1.5px solid #dbeafe; 
+            border-radius: 14px; 
+            box-sizing: border-box; 
+            font-size: 0.95rem;
+            color: #1e3a8a;
+            outline: none;
+            transition: 0.2s;
+        }
+        .form-control:focus {
+            border-color: #3b82f6;
+            box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.1);
+        }
+        
+        .btn-primary { 
+            width: 100%; 
+            padding: 14px; 
+            background: #2563eb; 
+            border: none; 
+            color: white; 
+            border-radius: 14px; 
+            font-weight: bold; 
+            font-size: 1rem;
+            cursor: pointer; 
+            margin-top: 10px; 
+            box-shadow: 0 4px 12px rgba(37, 99, 235, 0.2);
+            transition: 0.2s;
+        }
+        .btn-primary:hover {
+            background: #1d4ed8;
+            transform: translateY(-1px);
+        }
+        
+        .error { color: #ef4444; font-size: 0.8rem; margin-top: 5px; font-weight: 500; }
+        .global-error { background: #fee2e2; color: #b91c1c; padding: 10px; border-radius: 12px; font-size: 0.85rem; margin-bottom: 20px; border: 1px solid #fca5a5; }
+
+        @keyframes float {
+            0% { transform: translateY(0px); }
+            50% { transform: translateY(-8px); }
+            100% { transform: translateY(0px); }
+        }
     </style>
 </head>
 <body>
 <div class="wrapper">
-    <h2>Welcome Back 💙</h2>
+    <div class="avatar-logo">🔒💙</div>
+    <h2>Welcome Back</h2>
+    <p>Enter our private sanctuary ✨</p>
+    
     <?php 
     if(!empty($login_err)){
-        echo '<div class="error" style="margin-bottom:10px; text-align:center;">' . $login_err . '</div>';
+        echo '<div class="global-error">' . $login_err . '</div>';
     }        
     ?>
+    
     <form action="<?php echo htmlspecialchars($_SERVER["PHP_SELF"]); ?>" method="post">
         <div class="form-group">
-            <label>Username</label>
-            <input type="text" name="username" class="form-control" value="<?php echo $username; ?>">
+            <label>Username 👑</label>
+            <input type="text" name="username" class="form-control" value="<?php echo $username; ?>" placeholder="Who is connecting?">
             <span class="error"><?php echo $username_err; ?></span>
         </div>    
         <div class="form-group">
-            <label>Password</label>
-            <input type="password" name="password" class="form-control">
+            <label>Password 🔑</label>
+            <input type="password" name="password" class="form-control" placeholder="Our secret passkey...">
             <span class="error"><?php echo $password_err; ?></span>
         </div>
         <div class="form-group">
-            <input type="submit" class="btn-primary" value="Login">
+            <input type="submit" class="btn-primary" value="Open Nest 🕊️">
         </div>
     </form>
 </div>

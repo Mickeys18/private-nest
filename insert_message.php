@@ -5,55 +5,51 @@ if (session_status() === PHP_SESSION_NONE) {
 require_once "config.php";
 header('Content-Type: application/json');
 
-if (!isset($_SESSION["loggedin"]) || $_SESSION["loggedin"] !== true) {
-    echo json_encode(["status" => "error", "message" => "Unauthorized access parameters rejection"]);
+if (!isset($_SESSION["loggedin"]) || $_SESSION["loggedin"] !== true || $_SERVER["REQUEST_METHOD"] !== "POST") {
+    echo json_encode(["status" => "error", "message" => "Unauthorized connection attempt"]);
     exit;
 }
 
-if ($_SERVER["REQUEST_METHOD"] == "POST") {
-    $user_id = isset($_SESSION["user_id"]) ? $_SESSION["user_id"] : $_SESSION["id"];
-    $message_payload = isset($_POST['message']) ? trim($_POST['message']) : '';
+$message = isset($_POST['message']) ? trim($_POST['message']) : '';
+$reply_to = isset($_POST['reply_to']) ? trim($_POST['reply_to']) : '';
 
-    if (empty($message_payload)) {
-        echo json_encode(["status" => "error", "message" => "Content value payload empty"]);
-        exit;
+if ($message === '') {
+    echo json_encode(["status" => "error", "message" => "Cannot parse empty strings"]);
+    exit;
+}
+
+$current_user_id = isset($_SESSION["user_id"]) ? $_SESSION["user_id"] : $_SESSION["id"];
+
+try {
+    $meta = $pdo->query("SHOW COLUMNS FROM messages");
+    $columns = $meta->fetchAll(PDO::FETCH_COLUMN);
+    
+    $senderCol = in_array('sender_id', $columns) ? 'sender_id' : (in_array('user_id', $columns) ? 'user_id' : $columns[1]);
+    
+    if (in_array('message_text', $columns)) { $textCol = 'message_text'; }
+    elseif (in_array('message', $columns)) { $textCol = 'message'; }
+    else { $textCol = $columns[2]; }
+
+    // Accommodate extra table columns safely if your migration script applied them
+    $extraFields = "";
+    $extraValues = "";
+    $params = [':sender' => $current_user_id, ':msg' => $message];
+
+    if (in_array('reply_to_text', $columns) && !empty($reply_to)) {
+        $extraFields = ", reply_to_text";
+        $extraValues = ", :reply";
+        $params[':reply'] = $reply_to;
     }
 
-    try {
-        $checkCols = $pdo->query("SHOW COLUMNS FROM messages");
-        $columns = $checkCols->fetchAll(PDO::FETCH_COLUMN);
-        
-        $senderKey = in_array('sender_id', $columns) ? 'sender_id' : (in_array('user_id', $columns) ? 'user_id' : $columns[1]);
-        
-        if (in_array('message', $columns)) { $textKey = 'message'; }
-        elseif (in_array('msg_text', $columns)) { $textKey = 'msg_text'; }
-        elseif (in_array('body', $columns)) { $textKey = 'body'; }
-        else { $textKey = $columns[2]; }
-        
-        $fields = ["$senderKey", "$textKey"];
-        $vals = [":user_id", ":message"];
-        
-        if (in_array('created_at', $columns)) {
-            $fields[] = 'created_at';
-            $vals[] = 'NOW()';
-        }
-        
-        $sql = "INSERT INTO messages (" . implode(", ", $fields) . ") VALUES (" . implode(", ", $vals) . ")";
-        $stmt = $pdo->prepare($sql);
-        $stmt->bindValue(":user_id", $user_id, PDO::PARAM_INT);
-        $stmt->bindValue(":message", $message_payload, PDO::PARAM_STR);
-        
-        if ($stmt->execute()) {
-            // 🌸 STORAGE CLEANUP ENGINE: Wipe logs older than 48 Hours automatically
-            if (in_array('created_at', $columns)) {
-                $pdo->query("DELETE FROM messages WHERE created_at < NOW() - INTERVAL 2 DAY");
-            }
-            echo json_encode(["status" => "success"]);
-        } else {
-            echo json_encode(["status" => "error", "message" => "Insertion execution fault status dropped"]);
-        }
-    } catch (PDOException $e) {
-        echo json_encode(["status" => "error", "message" => $e->getMessage()]);
+    $sql = "INSERT INTO messages ($senderCol, $textCol $extraFields) VALUES (:sender, :msg $extraValues)";
+    $stmt = $pdo->prepare($sql);
+    
+    if ($stmt->execute($params)) {
+        echo json_encode(["status" => "success"]);
+    } else {
+        echo json_encode(["status" => "error", "message" => "Database execution path failure"]);
     }
+} catch (PDOException $e) {
+    echo json_encode(["status" => "error", "message" => $e->getMessage()]);
 }
 ?>

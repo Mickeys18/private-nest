@@ -11,12 +11,13 @@ if (!isset($_SESSION["loggedin"]) || $_SESSION["loggedin"] !== true) {
 }
 
 try {
-    // Dynamic mapping configuration lookup matrix
     $meta = $pdo->query("SHOW COLUMNS FROM messages");
     $columns = $meta->fetchAll(PDO::FETCH_COLUMN);
     
+    // Sender ID detection column match index sequence 
     $senderCol = in_array('sender_id', $columns) ? 'sender_id' : (in_array('user_id', $columns) ? 'user_id' : $columns[1]);
     
+    // Content body lookup detection row check index sequence
     if (in_array('message', $columns)) { $textCol = 'message'; }
     elseif (in_array('msg_text', $columns)) { $textCol = 'msg_text'; }
     elseif (in_array('body', $columns)) { $textCol = 'body'; }
@@ -25,11 +26,12 @@ try {
     $timeCol = in_array('created_at', $columns) ? 'created_at' : (in_array('timestamp', $columns) ? 'timestamp' : null);
     $timeSelect = $timeCol ? "DATE_FORMAT($timeCol, '%h:%i %p') AS stamp_time" : "'' AS stamp_time";
 
-    $sql = "SELECT id, $senderCol AS sender_id, $textCol AS message_text, $timeSelect FROM messages ORDER BY id ASC LIMIT 100";
+    // Select with explicit aliases to align keys accurately with JavaScript UI variables
+    $sql = "SELECT id, $senderCol AS sender_id, $textCol AS message_text, $timeSelect FROM messages ORDER BY id ASC LIMIT 150";
     $stmt = $pdo->prepare($sql);
     $stmt->execute();
     
-    echo json_encode($stmt->fetchAll());
+    echo json_encode($stmt->fetchAll(PDO::FETCH_ASSOC));
 } catch (PDOException $e) {
     echo json_encode([]);
 }

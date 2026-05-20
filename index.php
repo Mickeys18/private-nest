@@ -19,283 +19,299 @@ $current_username = $_SESSION["username"];
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Our Private Nest 🕊️💖</title>
+    <title>Our Private Nest 🕊️💙</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <style>
         :root {
-            --bg-gradient: linear-gradient(135deg, #fce7f3 0%, #fae8ff 50%, #e0f2fe 100%);
-            --panel-bg: rgba(255, 255, 255, 0.85);
-            --primary-accent: #db2777;
-            --secondary-accent: #0284c7;
-            --text-dark: #1e293b;
+            --bg-gradient: linear-gradient(135deg, #1e3a8a 0%, #3b82f6 35%, #f472b6 70%, #fce7f3 100%);
+            --glass-panel: rgba(255, 255, 255, 0.22);
+            --glass-border: rgba(255, 255, 255, 0.4);
+            --bubble-me: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
+            --bubble-them: linear-gradient(135deg, #ec4899 0%, #db2777 100%);
         }
 
         body {
-            margin: 0;
-            padding: 0;
+            margin: 0; padding: 0;
             background: var(--bg-gradient);
-            font-family: 'Segoe UI', Roboto, Helvetica, sans-serif;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            height: 100vh;
-            color: var(--text-dark);
+            background-size: 300% 300%;
+            animation: flowingGlow 15s ease infinite;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            display: flex; justify-content: center; align-items: center;
+            height: 100vh; overflow: hidden;
         }
 
-        .phone-frame {
-            width: 100%;
-            max-width: 410px;
-            height: 92vh;
-            background: var(--panel-bg);
+        @keyframes flowingGlow {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+
+        .premium-container {
+            width: 100%; max-width: 420px; height: 92vh;
+            background: rgba(255, 255, 255, 0.15);
+            backdrop-filter: blur(25px);
+            -webkit-backdrop-filter: blur(25px);
             border-radius: 40px;
-            box-shadow: 0 25px 60px rgba(219, 39, 119, 0.12);
-            border: 2px solid rgba(255, 255, 255, 0.7);
-            display: flex;
-            flex-direction: column;
-            overflow: hidden;
-            backdrop-filter: blur(15px);
+            border: 2px solid var(--glass-border);
+            box-shadow: 0 35px 80px rgba(0, 0, 0, 0.25);
+            display: flex; flex-direction: column; overflow: hidden;
             position: relative;
         }
 
-        /* Top Bar Navigation Styles */
-        .header-nav {
-            padding: 16px 20px;
-            background: rgba(255, 255, 255, 0.9);
-            border-bottom: 1px dashed #fbcfe8;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
+        /* Luxury Header section */
+        .glass-header {
+            padding: 18px 24px;
+            background: rgba(255, 255, 255, 0.25);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.3);
+            display: flex; align-items: center; justify-content: space-between;
+            z-index: 10;
         }
 
-        .profile-cluster { display: flex; align-items: center; gap: 10px; }
-        .status-avatar { width: 42px; height: 42px; background: #fdf2f8; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 1.3rem; border: 1px solid #fbcfe8; }
-        .meta-details h4 { margin: 0; color: #9d174d; font-size: 0.95rem; font-weight: 800; }
-        .meta-details p { margin: 2px 0 0 0; font-size: 0.75rem; color: #64748b; font-weight: 600; }
+        .user-meta-info h3 { margin: 0; color: #ffffff; font-size: 1.15rem; font-weight: 800; text-shadow: 0 2px 4px rgba(0,0,0,0.15); }
+        .user-meta-info p { margin: 4px 0 0 0; font-size: 0.78rem; color: #eff6ff; font-weight: 600; }
 
-        .action-button-group { display: flex; gap: 8px; }
-        .action-btn { background: #fdf2f8; border: 1px solid #fbcfe8; width: 38px; height: 38px; border-radius: 50%; display: flex; justify-content: center; align-items: center; cursor: pointer; text-decoration: none; font-size: 0.95rem; transition: transform 0.2s; }
-        .action-btn:hover { transform: scale(1.08); background: #fce7f3; }
+        .header-actions { display: flex; gap: 10px; }
+        .action-circle-btn {
+            background: rgba(255, 255, 255, 0.3); border: 1px solid rgba(255, 255, 255, 0.4);
+            color: #ffffff; width: 42px; height: 42px; border-radius: 50%;
+            display: flex; justify-content: center; align-items: center;
+            cursor: pointer; font-size: 1.1rem; text-decoration: none; transition: all 0.2s;
+        }
+        .action-circle-btn:hover { background: #ffffff; color: #2563eb; transform: scale(1.08); }
 
-        /* Dynamic Subheading Alert strip */
-        .system-status-bar {
-            background: linear-gradient(90deg, #fdf2f8 0%, #f0fdf4 100%);
-            padding: 6px 20px;
-            border-bottom: 1px solid rgba(244, 63, 94, 0.08);
-            display: flex;
-            justify-content: space-between;
-            font-size: 0.75rem;
-            font-weight: 700;
-            color: #be185d;
+        /* The Chat Area Workspace */
+        .chat-space {
+            flex: 1; padding: 25px 20px; overflow-y: auto;
+            display: flex; flex-direction: column; gap: 18px;
+            background: rgba(15, 23, 42, 0.05);
         }
 
-        /* Messaging Window Canvas */
-        .chat-canvas {
-            flex: 1;
-            padding: 20px;
-            overflow-y: auto;
-            display: flex;
-            flex-direction: column;
-            gap: 14px;
-            background: rgba(255, 255, 255, 0.3);
+        /* Message Bubble Elements */
+        .message-row { display: flex; flex-direction: column; position: relative; max-width: 80%; clear: both; }
+        .message-row.me { align-self: flex-end; align-items: flex-end; }
+        .message-row.them { align-self: flex-start; align-items: flex-start; }
+
+        .bubble-block {
+            padding: 14px 18px; border-radius: 24px;
+            font-size: 0.98rem; line-height: 1.45; font-weight: 500;
+            position: relative; cursor: pointer; transition: transform 0.15s;
         }
+        .message-row.me .bubble-block { background: var(--bubble-me); color: white; border-bottom-right-radius: 4px; box-shadow: 0 6px 15px rgba(37, 99, 235, 0.25); }
+        .message-row.them .bubble-block { background: var(--bubble-them); color: white; border-bottom-left-radius: 4px; box-shadow: 0 6px 15px rgba(236, 72, 153, 0.25); }
+        .bubble-block:hover { transform: scale(1.02); }
 
-        .msg-row { display: flex; flex-direction: column; position: relative; max-width: 78%; }
-        .msg-row.me { align-self: flex-end; align-items: flex-end; }
-        .msg-row.them { align-self: flex-start; align-items: flex-start; }
+        .time-stamp { font-size: 0.68rem; color: rgba(255, 255, 255, 0.85); margin-top: 5px; font-weight: 700; text-shadow: 0 1px 2px rgba(0,0,0,0.1); }
 
-        .msg-bubble {
-            padding: 12px 16px;
-            border-radius: 24px;
-            font-size: 0.95rem;
-            line-weight: 1.45;
-            color: #1e293b;
-            position: relative;
-            cursor: pointer;
-            word-break: break-word;
+        /* The Fixed, Beautiful Context Menu Context Overlay */
+        .custom-context-menu {
+            display: none; position: absolute; background: white;
+            border-radius: 14px; box-shadow: 0 10px 30px rgba(0,0,0,0.18);
+            z-index: 999; width: 110px; overflow: hidden; border: 1px solid #e2e8f0;
         }
-        .msg-row.me .msg-bubble { background: linear-gradient(135deg, #f472b6 0%, #db2777 100%); color: white; border-bottom-right-radius: 4px; box-shadow: 0 4px 12px rgba(219,39,119,0.15); }
-        .msg-row.them .msg-bubble { background: white; border-bottom-left-radius: 4px; box-shadow: 0 4px 12px rgba(0,0,0,0.03); border: 1px solid #f1f5f9; }
-
-        .msg-meta-stamp { font-size: 0.65rem; color: #94a3b8; margin-top: 4px; font-weight: 600; padding: 0 4px; }
-
-        /* Popover Context Action Menus */
-        .msg-context-menu {
-            display: none;
-            position: absolute;
-            background: white;
-            border: 1px solid #e2e8f0;
-            border-radius: 12px;
-            box-shadow: 0 10px 25px rgba(0,0,0,0.1);
-            z-index: 100;
-            overflow: hidden;
-            top: 100%;
+        .custom-context-menu button {
+            background: none; border: none; padding: 10px 14px; width: 100%;
+            text-align: left; font-size: 0.8rem; font-weight: 700; cursor: pointer;
+            color: #334155; display: flex; align-items: center; gap: 8px; transition: background 0.2s;
         }
-        .msg-context-menu button {
-            background: none; border: none; padding: 8px 14px; width: 100%; text-align: left; font-size: 0.75rem; font-weight: 700; cursor: pointer; color: #475569; display: flex; align-items: center; gap: 6px;
-        }
-        .msg-context-menu button:hover { background: #f8fafc; color: #000; }
-        .msg-context-menu button.danger-action { color: #ef4444; }
-        .msg-context-menu button.danger-action:hover { background: #fee2e2; }
+        .custom-context-menu button:hover { background: #f1f5f9; color: #000; }
+        .custom-context-menu button.delete-btn { color: #ef4444; }
+        .custom-context-menu button.delete-btn:hover { background: #fee2e2; }
 
-        /* Footer Text Controls Form Wrapper */
-        .chat-footer-controls {
-            padding: 16px 20px;
-            background: rgba(255, 255, 255, 0.95);
-            border-top: 1px solid #f1f5f9;
-            display: flex;
-            align-items: center;
-            gap: 10px;
+        /* Call Modal Selection Window Box Layout */
+        .call-modal-overlay {
+            display: none; position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(15, 23, 42, 0.6); backdrop-filter: blur(8px);
+            justify-content: center; align-items: center; z-index: 2000;
         }
-
-        .input-text-node {
-            flex: 1;
-            padding: 14px 18px;
-            border-radius: 30px;
-            border: 1.5px solid #fbcfe8;
-            outline: none;
-            font-size: 0.95rem;
-            color: #1e293b;
-            background: #fffdfd;
-            transition: border-color 0.2s;
+        .call-card {
+            background: white; width: 80%; max-width: 290px; padding: 25px;
+            border-radius: 30px; text-align: center; box-shadow: 0 20px 50px rgba(0,0,0,0.3);
+            animation: popUp 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
         }
-        .input-text-node:focus { border-color: #db2777; box-shadow: 0 0 0 4px rgba(219,39,119,0.06); }
+        @keyframes popUp { from { transform: scale(0.8); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+        .call-card h4 { margin: 0 0 10px 0; font-size: 1.1rem; color: #1e293b; font-weight: 800; }
+        .call-card p { margin: 0 0 20px 0; font-size: 0.85rem; color: #64748b; }
+        .call-options-grid { display: flex; flex-direction: column; gap: 10px; }
+        .modal-call-btn {
+            padding: 12px; border-radius: 16px; border: none; font-weight: 700;
+            font-size: 0.95rem; cursor: pointer; display: flex; justify-content: center; align-items: center; gap: 10px; transition: 0.2s;
+        }
+        .modal-call-btn.voice { background: #eff6ff; color: #2563eb; }
+        .modal-call-btn.voice:hover { background: #dbeafe; }
+        .modal-call-btn.video { background: #fdf2f8; color: #ec4899; }
+        .modal-call-btn.video:hover { background: #fce7f3; }
+        .modal-call-btn.cancel { background: #f1f5f9; color: #64748b; margin-top: 5px; }
 
-        .media-trigger-btn { background: #fdf2f8; border: 1px solid #fbcfe8; width: 44px; height: 44px; border-radius: 50%; display: flex; justify-content: center; align-items: center; cursor: pointer; font-size: 1.1rem; transition: background 0.2s; }
-        .media-trigger-btn:hover { background: #fce7f3; }
-        .media-trigger-btn.submit-accent { background: #db2777; color: white; border: none; }
-        .media-trigger-btn.submit-accent:hover { background: #be185d; }
+        /* Footer Input Actions Group Layout Area */
+        .glass-footer {
+            padding: 16px 20px; background: rgba(255, 255, 255, 0.2);
+            border-top: 1px solid rgba(255, 255, 255, 0.25);
+            display: flex; align-items: center; gap: 12px;
+        }
+        .message-input-bar {
+            flex: 1; padding: 14px 20px; border-radius: 30px;
+            border: 2px solid rgba(255, 255, 255, 0.4); outline: none;
+            font-size: 0.98rem; color: #ffffff; background: rgba(255, 255, 255, 0.15);
+        }
+        .message-input-bar::placeholder { color: rgba(255, 255, 255, 0.75); }
+        .message-input-bar:focus { border-color: #ffffff; background: rgba(255, 255, 255, 0.25); }
+
+        .media-circle-action {
+            background: white; border: none; width: 46px; height: 46px;
+            border-radius: 50%; display: flex; justify-content: center; align-items: center;
+            cursor: pointer; font-size: 1.15rem; box-shadow: 0 4px 12px rgba(0,0,0,0.1); transition: 0.2s;
+        }
+        .media-circle-action:hover { transform: scale(1.06); }
+        .media-circle-action.send-accent { background: #ffffff; color: #2563eb; }
     </style>
 </head>
 <body>
 
-<div class="phone-frame">
-    <div class="header-nav">
-        <div class="profile-cluster">
-            <div class="status-avatar">👑</div>
-            <div class="meta-details">
-                <h4>Our Private Space 💕</h4>
-                <p>Logged in: <?php echo htmlspecialchars($current_username); ?></p>
-            </div>
+<div class="call-modal-overlay" id="callModalShell">
+    <div class="call-card">
+        <h4>Connect Line 🌸</h4>
+        <p>Choose your communication pathway:</p>
+        <div class="call-options-grid">
+            <button class="modal-call-btn voice" onclick="triggerCallConnection('Voice')">📞 Voice Call</button>
+            <button class="modal-call-btn video" onclick="triggerCallConnection('Video')">📹 Video Call</button>
+            <button class="modal-call-btn cancel" onclick="closeCallModalWindow()">Cancel</button>
         </div>
-        <div class="action-button-group">
-            <button class="action-btn" onclick="triggerCallAlert()">📞</button>
-            <a href="logout.php" class="action-btn" title="Sign Out">🚪</a>
+    </div>
+</div>
+
+<div class="custom-context-menu" id="globalContextMenuNode">
+    <button type="button" id="ctxReplyHandler">🔄 Reply</button>
+    <button type="button" id="ctxDeleteHandler" class="delete-btn">🗑️ Delete</button>
+</div>
+
+<div class="premium-container">
+    <div class="glass-header">
+        <div class="user-meta-info">
+            <h3>Our Private Space 💕</h3>
+            <p>Active: ✨ <?php echo htmlspecialchars($current_username); ?></p>
+        </div>
+        <div class="header-actions">
+            <button class="action-circle-btn" onclick="openCallModalWindow()">📞</button>
+            <a href="logout.php" class="action-circle-btn">🚪</a>
         </div>
     </div>
 
-    <div class="system-status-bar">
-        <span>✨ hi sweetie, welcome home</span>
-        <span>🌸 Auto-Cleanup Active</span>
-    </div>
+    <div class="chat-space" id="chatLogsWrapper"></div>
 
-    <div class="chat-canvas" id="chatLogsCanvas">
-        </div>
-
-    <form class="chat-footer-controls" id="messageDataPayloadForm" onsubmit="transmitChatMessage(event)">
-        <button type="button" class="media-trigger-btn" onclick="triggerVoiceRecorderAlert()">🎙️</button>
-        <input type="text" id="chatTextInputField" class="input-text-node" placeholder="Type a lovely message... 💬" autocomplete="off">
-        <button type="submit" class="media-trigger-btn submit-accent">💝</button>
+    <form class="glass-footer" id="chatTransmissionActionForm" onsubmit="processMessageSubmission(event)">
+        <button type="button" class="media-circle-action" onclick="triggerVoiceRecorderEngine()">🎙️</button>
+        <input type="text" id="chatMessageBoxInput" class="message-input-bar" placeholder="Write a lovely message... 💬" autocomplete="off">
+        <button type="submit" class="media-circle-action send-accent">🚀</button>
     </form>
 </div>
 
 <script>
-const activeSessionProfileID = <?php echo $current_user_id; ?>;
-let registeredMessagesCacheMap = [];
+const activeProfileSessionID = <?php echo $current_user_id; ?>;
+let localViewDatasetCache = [];
+let currentlySelectedMsgId = null;
 
-function loadChatLogsPipeline() {
+function syncChatLogsPayload() {
     fetch('fetch_messages.php')
     .then(res => res.json())
-    .then(dataset => {
-        if(JSON.stringify(dataset) === JSON.stringify(registeredMessagesCacheMap)) return;
-        registeredMessagesCacheMap = dataset;
+    .then(payload => {
+        if(JSON.stringify(payload) === JSON.stringify(localViewDatasetCache)) return;
+        localViewDatasetCache = payload;
         
-        const canvas = document.getElementById('chatLogsCanvas');
-        canvas.innerHTML = '';
+        const viewer = document.getElementById('chatLogsWrapper');
+        viewer.innerHTML = '';
         
-        dataset.forEach(record => {
-            const isMe = parseInt(record.sender_id) === activeSessionProfileID;
+        payload.forEach(item => {
+            const isSelfOwned = parseInt(item.sender_id) === activeProfileSessionID;
+            const containerRow = document.createElement('div');
+            containerRow.className = `message-row ${isSelfOwned ? 'me' : 'them'}`;
             
-            const row = document.createElement('div');
-            row.className = `msg-row ${isMe ? 'me' : 'them'}`;
-            row.id = `msg_block_${record.id}`;
-            
-            row.innerHTML = `
-                <div class="msg-bubble" onclick="toggleContextPopMenu(event, ${record.id})">
-                    ${escapeHtmlSanitizer(record.message_text)}
-                    <div class="msg-context-menu" id="pop_menu_${record.id}">
-                        <button type="button" onclick="replyActionWrapper('${escapeJsString(record.message_text)}')">🔄 Reply</button>
-                        ${isMe ? `<button type="button" class="danger-action" onclick="deleteMessagePipeline(${record.id})">🗑️ Delete</button>` : ''}
-                    </div>
+            containerRow.innerHTML = `
+                <div class="bubble-block" data-msg-id="${item.id}" data-body="${escapeHtmlAttribute(item.message_text)}">
+                    ${escapeHtmlEntities(item.message_text)}
                 </div>
-                <div class="msg-meta-stamp">${record.stamp_time || 'Just now'}</div>
+                <div class="time-stamp">${item.stamp_time || 'Just now'}</div>
             `;
-            canvas.appendChild(row);
+            
+            // Context menu listener trigger registration
+            containerRow.querySelector('.bubble-block').addEventListener('click', function(e) {
+                renderContextPopoverMenu(e, item.id, isSelfOwned, item.message_text);
+            });
+
+            viewer.appendChild(containerRow);
         });
-        canvas.scrollTop = canvas.scrollHeight;
-    }).catch(err => console.log("Poller connection line refresh skipped. Waiting next frame..."));
+        viewer.scrollTop = viewer.scrollHeight;
+    });
 }
 
-function transmitChatMessage(e) {
+function processMessageSubmission(e) {
     e.preventDefault();
-    const element = document.getElementById('chatTextInputField');
-    const dataString = element.value.trim();
-    if(!dataString) return;
+    const inputNode = document.getElementById('chatMessageBoxInput');
+    const msgText = inputNode.value.trim();
+    if(!msgText) return;
     
-    element.value = '';
+    inputNode.value = '';
     
-    const contextBody = new FormData();
-    contextBody.append('message', dataString);
+    const bodyForm = new FormData();
+    bodyForm.append('message', msgText);
     
-    fetch('insert_message.php', { method: 'POST', body: contextBody })
-    .then(r => r.json())
-    .then(status => {
-        if(status.status === 'success') {
-            loadChatLogsPipeline();
-        } else {
-            alert("Delivery failed: " + status.message);
-        }
-    }).catch(err => alert("Lost server synchronization path. Check your active line status."));
-}
-
-function deleteMessagePipeline(msgId) {
-    if(!confirm("Delete this message for both of us? 🌸")) return;
-    const coreData = new FormData();
-    coreData.append('message_id', msgId);
-    
-    fetch('delete_message.php', { method: 'POST', body: coreData })
+    fetch('insert_message.php', { method: 'POST', body: bodyForm })
     .then(r => r.json())
     .then(res => {
-        if(res.status === 'success') { loadChatLogsPipeline(); }
-        else { alert("Unable to modify history logs: " + res.message); }
+        if(res.status === 'success') { syncChatLogsPayload(); }
+        else { alert("Error writing entry: " + res.message); }
     });
 }
 
-function toggleContextPopMenu(e, id) {
+function renderContextPopoverMenu(e, msgId, isSelfOwned, contentText) {
     e.stopPropagation();
-    document.querySelectorAll('.msg-context-menu').forEach(menu => {
-        if(menu.id !== `pop_menu_${id}`) menu.style.display = 'none';
+    currentlySelectedMsgId = msgId;
+    const menu = document.getElementById('globalContextMenuNode');
+    
+    menu.style.display = 'block';
+    menu.style.left = `${Math.min(e.pageX, window.innerWidth - 130)}px`;
+    menu.style.top = `${Math.min(e.pageY, window.innerHeight - 100)}px`;
+    
+    // Wire up events cleanly
+    document.getElementById('ctxReplyHandler').onclick = () => {
+        const input = document.getElementById('chatMessageBoxInput');
+        input.value = `Replying to ("${contentText}"): `;
+        input.focus();
+    };
+    
+    const delBtn = document.getElementById('ctxDeleteHandler');
+    if(isSelfOwned) {
+        delBtn.style.display = 'flex';
+        delBtn.onclick = () => { executeRowDeletionsEngine(msgId); };
+    } else {
+        delBtn.style.display = 'none';
+    }
+}
+
+function executeRowDeletionsEngine(msgId) {
+    if(!confirm("Remove this message record? 🌸")) return;
+    const payloadForm = new FormData();
+    payloadForm.append('message_id', msgId);
+    
+    fetch('delete_message.php', { method: 'POST', body: payloadForm })
+    .then(r => r.json())
+    .then(res => {
+        if(res.status === 'success') { syncChatLogsPayload(); }
     });
-    const selectedMenu = document.getElementById(`pop_menu_${id}`);
-    selectedMenu.style.display = selectedMenu.style.display === 'block' ? 'none' : 'block';
 }
 
-function replyActionWrapper(text) {
-    document.getElementById('chatTextInputField').value = `Replying to ("${text}"): `;
-    document.getElementById('chatTextInputField').focus();
-}
+function openCallModalWindow() { document.getElementById('callModalShell').style.display = 'flex'; }
+function closeCallModalWindow() { document.getElementById('callModalShell').style.display = 'none'; }
+function triggerCallConnection(type) { alert(`💖 Initializing private ${type} connection stream route secure channels... 🔒✨`); closeCallModalWindow(); }
+function triggerVoiceRecorderEngine() { alert("🎙️ Listening line container streaming live notes now... ❤️🎵"); }
 
-function triggerCallAlert() { alert("💖 Calling your love line... Ringing status active! 📞✨"); }
-function triggerVoiceRecorderAlert() { alert("🎙️ Voice memo recording pipeline initialised... Speak your heart out! ❤️🎵"); }
-function escapeHtmlSanitizer(text) { return text.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;"); }
-function escapeJsString(str) { return str.replace(/'/g, "\\'").replace(/"/g, '\\"'); }
+function escapeHtmlEntities(str) { return str ? str.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;") : ''; }
+function escapeHtmlAttribute(str) { return str ? str.replace(/"/g, "&quot;").replace(/'/g, "&#039;") : ''; }
 
-document.addEventListener('click', () => {
-    document.querySelectorAll('.msg-context-menu').forEach(m => m.style.display = 'none');
-});
+document.addEventListener('click', () => { document.getElementById('globalContextMenuNode').style.display = 'none'; });
 
-// Run immediate fetch loop synchronization cycle every 2 seconds
-loadChatLogsPipeline();
-setInterval(loadChatLogsPipeline, 2000);
+// Initialise pooling loop background cycle sequence instantly
+syncChatLogsPayload();
+setInterval(syncChatLogsPayload, 2000);
 </script>
 </body>
 </html>

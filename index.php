@@ -9,16 +9,15 @@ if (!isset($_SESSION["loggedin"]) || $_SESSION["loggedin"] !== true) {
 }
 
 $my_username = $_SESSION["username"];
-$partner_title = (strtolower($my_username) === 'mickey') ? 'Ryry' : 'Mickey';
+$partner_title = (strtolower($my_username) === 'king') ? 'Queen' : 'King';
 
-// Setup explicit dynamic headers and custom aesthetic tones depending on who is logged in
-if (strtolower($my_username) === 'mickey') {
-    $my_display_title = "Mickey 👑";
-    $partner_display_title = "Ryry 💝";
+if (strtolower($my_username) === 'king') {
+    $my_display_title = "King 👑";
+    $partner_display_title = "Queen 💝";
     $gradient_background = "linear-gradient(-45deg, #0f172a, #1e1b4b, #1e293b, #0f172a)";
 } else {
-    $my_display_title = "Ryry 💝";
-    $partner_display_title = "Mickey 👑";
+    $my_display_title = "Queen 💝";
+    $partner_display_title = "King 👑";
     $gradient_background = "linear-gradient(-45deg, #2e1022, #1e1b4b, #31102f, #2e1022)";
 }
 ?>
@@ -148,13 +147,11 @@ function syncChat() {
     fetch('messages.php')
     .then(r => r.text())
     .then(rawText => {
-        // Safe protection check against unformatted string crashes or broken responses
         if (!rawText.trim() || rawText.startsWith("<")) return;
 
         const data = JSON.parse(rawText);
         if (data.status !== 'success') return;
 
-        // Dynamic status engine check updates
         const dot = document.getElementById('onlineDot');
         const label = document.getElementById('onlineLabel');
         if (data.partner_online) {
@@ -185,7 +182,6 @@ function syncChat() {
             let cleanText = msg.message_text;
             let replyBlock = '';
 
-            // Separate combined metadata reply configurations from plain message body lines safely
             if (cleanText.startsWith('⤺ ')) {
                 const pieces = cleanText.split(' | ');
                 const quoted = pieces[0].replace('⤺ ', '');
@@ -211,7 +207,6 @@ function syncChat() {
             const bubble = row.querySelector('.bubble-block');
             bubble.textContent = cleanText;
 
-            // Trigger structural mini options context menus instantly on click
             bubble.addEventListener('click', (e) => {
                 e.stopPropagation();
                 const menu = document.getElementById('messageMiniMenu');

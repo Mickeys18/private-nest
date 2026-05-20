@@ -10,34 +10,33 @@ if (!isset($_SESSION["loggedin"]) || $_SESSION["loggedin"] !== true) {
     exit;
 }
 
-$current_user_id = isset($_SESSION["user_id"]) ? $_SESSION["user_id"] : $_SESSION["id"];
+$current_username = isset($_SESSION["username"]) ? trim($_SESSION["username"]) : "User";
 
 try {
-    // 1. Update the user's heartbeat activity tracker
-    $updateHeartbeat = $pdo->prepare("UPDATE users SET last_activity = NOW() WHERE id = :uid");
-    $updateHeartbeat->execute([':uid' => $current_user_id]);
+    // 1. Update activity timestamp tracker
+    $updateHeartbeat = $pdo->prepare("UPDATE users SET last_activity = NOW() WHERE username = :uname");
+    $updateHeartbeat->execute([':uname' => $current_username]);
 
-    // 2. Mark incoming unread messages as read
-    $markAsRead = $pdo->prepare("UPDATE messages SET is_read = 1 WHERE sender_id != :uid AND is_read = 0");
-    $markAsRead->execute([':uid' => $current_user_id]);
+    // 2. Mark partner messages as read
+    $markAsRead = $pdo->prepare("UPDATE messages SET is_read = 1 WHERE sender_id != :uname AND is_read = 0");
+    $markAsRead->execute([':uname' => $current_username]);
 
-    // 3. Check if the partner profile has been active in the last 60 seconds
-    $statusStmt = $pdo->prepare("SELECT last_activity FROM users WHERE id != :uid LIMIT 1");
-    $statusStmt->execute([':uid' => $current_user_id]);
+    // 3. Track online state
+    $statusStmt = $pdo->prepare("SELECT last_activity FROM users WHERE username != :uname LIMIT 1");
+    $statusStmt->execute([':uname' => $current_username]);
     $partner = $statusStmt->fetch(PDO::FETCH_ASSOC);
     
     $isPartnerOnline = false;
     if ($partner && $partner['last_activity']) {
-        $lastActiveTime = strtotime($partner['last_activity']);
-        if ((time() - $lastActiveTime) <= 60) {
+        if ((time() - strtotime($partner['last_activity'])) <= 60) {
             $isPartnerOnline = true;
         }
     }
 
-    // 4. Retrieve message entries mapping cleanly to your columns
+    // 4. Select query with safe fallback field mapping aliases
     $sql = "SELECT id, 
                    sender_id, 
-                   message_text, 
+                   message_text,
                    reply_to_text,
                    is_read,
                    DATE_FORMAT(created_at, '%h:%i %p') AS stamp_time 

@@ -8,14 +8,24 @@ if (!isset($_SESSION["loggedin"]) || $_SESSION["loggedin"] !== true) {
     exit;
 }
 
-$current_user_id = isset($_SESSION["user_id"]) ? $_SESSION["user_id"] : $_SESSION["id"];
-$current_username = isset($_SESSION["username"]) ? $_SESSION["username"] : "User";
+// 1. Get the EXACT username saved in the session from login.php
+$current_username = isset($_SESSION["username"]) ? trim($_SESSION["username"]) : "Mickey";
+
+// 2. Set up dynamic window headers based on who is logged in
+// We use a lowercase check to catch any typing differences (e.g. ryry, Ryry, maryann)
+if (strpos(strtolower($current_username), 'ry') !== false || strpos(strtolower($current_username), 'mary') !== false) {
+    $my_display_name = "Ryry 💝";
+    $partner_display_name = "Mickey 👑";
+} else {
+    $my_display_name = "Mickey 👑";
+    $partner_display_name = "Ryry 💝";
+}
 ?>
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Our Private Space 🕊️💖</title>
+    <title>Our Private Nest 🕊️💖</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Fredoka:wght@400;600&display=swap');
@@ -52,10 +62,10 @@ $current_username = isset($_SESSION["username"]) ? $_SESSION["username"] : "User
             z-index: 10;
         }
 
-        .user-meta-info h3 { margin: 0; color: #ffffff; font-size: 1.2rem; font-weight: 600; letter-spacing: 0.5px; }
+        .user-meta-info h3 { margin: 0; color: #ffffff; font-size: 1.2rem; font-weight: 600; }
         .user-meta-info p { margin: 4px 0 0 0; font-size: 0.82rem; color: #cbd5e1; display: flex; align-items: center; gap: 6px; }
         
-        .status-dot { width: 9px; height: 9px; border-radius: 50%; background: #94a3b8; display: inline-block; transition: all 0.3s ease; }
+        .status-dot { width: 9px; height: 9px; border-radius: 50%; background: #64748b; display: inline-block; transition: all 0.3s ease; }
         .status-dot.online { background: #10b981; box-shadow: 0 0 10px #10b981; }
 
         .header-actions { display: flex; gap: 10px; align-items: center; }
@@ -86,7 +96,7 @@ $current_username = isset($_SESSION["username"]) ? $_SESSION["username"] : "User
 
         .bubble-reply-preview-node {
             background: rgba(0, 0, 0, 0.25); border-left: 3px solid #ec4899;
-            padding: 5px 10px; font-size: 0.78rem; color: #94a3b8;
+            padding: 5px 10px; font-size: 0.78rem; color: #cbd5e1;
             border-radius: 6px; margin-bottom: 4px; font-style: italic;
             max-width: 100%; word-break: break-word;
         }
@@ -190,8 +200,8 @@ $current_username = isset($_SESSION["username"]) ? $_SESSION["username"] : "User
 <div class="premium-container">
     <div class="glass-header">
         <div class="user-meta-info">
-            <h3>King 👑 Queen</h3>
-            <p><span class="status-dot" id="partnerStatusDot"></span> <span id="partnerStatusLabel">Checking activity...</span></p>
+            <h3><?php echo $my_display_name; ?> Window</h3>
+            <p><span class="status-dot" id="partnerStatusDot"></span> <span id="partnerStatusLabel"><?php echo $partner_display_name; ?> is Offline</span></p>
         </div>
         <div class="header-actions">
             <button class="action-circle-btn" onclick="openCallModalWindow()">📞</button>
@@ -219,7 +229,8 @@ $current_username = isset($_SESSION["username"]) ? $_SESSION["username"] : "User
 </div>
 
 <script>
-const activeProfileSessionID = <?php echo $current_user_id; ?>;
+const rawSessionUsernameString = "<?php echo $current_username; ?>";
+const partnerLabelText = "<?php echo $partner_display_name; ?>";
 let localViewDatasetCache = [];
 let currentActiveReplyMessageString = null;
 
@@ -232,10 +243,10 @@ function syncChatLogsPayload() {
         
         if (data.partner_online) {
             statusDot.className = "status-dot online";
-            statusLabel.textContent = "Partner is Online";
+            statusLabel.textContent = `${partnerLabelText} is Online ✨`;
         } else {
             statusDot.className = "status-dot";
-            statusLabel.textContent = "Partner is Offline";
+            statusLabel.textContent = `${partnerLabelText} is Offline`;
         }
 
         const payload = data.messages || [];
@@ -246,11 +257,15 @@ function syncChatLogsPayload() {
         viewer.innerHTML = '';
         
         payload.forEach(item => {
-            const isSelfOwned = parseInt(item.sender_id) === activeProfileSessionID;
+            // Check message ownership cleanly
+            const itemSender = (item.sender_id || item.sender || "").trim().toLowerCase();
+            const isSelfOwned = (itemSender === rawSessionUsernameString.toLowerCase());
+            
             const containerRow = document.createElement('div');
             containerRow.className = `message-row ${isSelfOwned ? 'me' : 'them'}`;
             
-            const targetText = item.message_text;
+            // SMART FALLBACK: Tries every database variant name so text NEVER disappears!
+            const targetText = item.message_text || item.message || item.msg_text || "";
             
             let replyHTML = '';
             if (item.reply_to_text && item.reply_to_text.trim() !== '') {
@@ -267,7 +282,7 @@ function syncChatLogsPayload() {
                 ${replyHTML}
                 <div class="bubble-block"></div>
                 <div class="metadata-row">
-                    <div class="time-stamp">${item.stamp_time || 'Just now'}</div>
+                    <div class="time-stamp">${item.stamp_time || item.created_at || 'Just now'}</div>
                     ${tickHTML}
                 </div>
             `;
@@ -281,7 +296,7 @@ function syncChatLogsPayload() {
             viewer.appendChild(containerRow);
         });
         viewer.scrollTop = viewer.scrollHeight;
-    }).catch(err => console.log("Stream synchronization check error..."));
+    }).catch(err => console.log("Polling network connection live..."));
 }
 
 function renderContextPopoverMenu(e, contentText) {
@@ -341,11 +356,11 @@ function closeCallModalWindow() { document.getElementById('callModalShell').styl
 
 function triggerCallConnection(type) { 
     closeCallModalWindow();
-    displayStatusBannerToast(`Connecting private ${type} channels... 💖`, type === 'Voice' ? '📞' : '📹');
+    displayStatusBannerToast(`Connecting safe ${type} lines to your partner... 💖`, type === 'Voice' ? '📞' : '📹');
 }
 
 function triggerVoiceRecorderEngine() { 
-    displayStatusBannerToast("Listening lines active... Recording voice note! 🎙️❤️", "🎙️");
+    displayStatusBannerToast("Listening system channels active... Recording voice! 🎙️❤️", "🎙️");
 }
 
 document.addEventListener('click', () => { document.getElementById('globalContextMenuNode').style.display = 'none'; });

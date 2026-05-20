@@ -10,28 +10,24 @@ if (!isset($_SESSION["loggedin"]) || $_SESSION["loggedin"] !== true) {
 
 $current_user_id = isset($_SESSION["user_id"]) ? $_SESSION["user_id"] : $_SESSION["id"];
 $current_username = isset($_SESSION["username"]) ? $_SESSION["username"] : "User";
-
-// Dynamically determine partner persona identity roles
-$roleTitle = "King 👑";
-$partnerTitle = "Queen 👸";
-
-if (strpos(strtolower($current_username), 'maryann') !== false || strpos(strtolower($current_username), 'queen') !== false) {
-    $roleTitle = "Queen 👸";
-    $partnerTitle = "King 👑";
-}
 ?>
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Our Private Nest 🕊️💖</title>
+    <title>Our Private Space 🕊️💖</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <style>
+        @import url('https://fonts.googleapis.com/css2?family=Fredoka:wght@400;600&display=swap');
+
+        body, input, button, textarea {
+            font-family: 'Fredoka', sans-serif !important;
+        }
+
         body {
             margin: 0; padding: 0;
             background: linear-gradient(-45deg, #0f172a, #1e1b4b, #2e1022, #0f172a);
             background-size: 400% 400%;
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
             display: flex; justify-content: center; align-items: center;
             height: 100vh; overflow: hidden;
         }
@@ -56,8 +52,8 @@ if (strpos(strtolower($current_username), 'maryann') !== false || strpos(strtolo
             z-index: 10;
         }
 
-        .user-meta-info h3 { margin: 0; color: #ffffff; font-size: 1.1rem; font-weight: 700; }
-        .user-meta-info p { margin: 4px 0 0 0; font-size: 0.78rem; color: #cbd5e1; display: flex; align-items: center; gap: 6px; }
+        .user-meta-info h3 { margin: 0; color: #ffffff; font-size: 1.2rem; font-weight: 600; letter-spacing: 0.5px; }
+        .user-meta-info p { margin: 4px 0 0 0; font-size: 0.82rem; color: #cbd5e1; display: flex; align-items: center; gap: 6px; }
         
         .status-dot { width: 9px; height: 9px; border-radius: 50%; background: #94a3b8; display: inline-block; transition: all 0.3s ease; }
         .status-dot.online { background: #10b981; box-shadow: 0 0 10px #10b981; }
@@ -73,11 +69,9 @@ if (strpos(strtolower($current_username), 'maryann') !== false || strpos(strtolo
         .action-circle-btn:hover { background: rgba(255, 255, 255, 0.15); transform: scale(1.05); }
         
         .logout-pill-btn {
-            background: rgba(239, 68, 68, 0.1);
-            border: 1px solid rgba(239, 68, 68, 0.2);
+            background: rgba(239, 68, 68, 0.1); border: 1px solid rgba(239, 68, 68, 0.2);
             color: #fca5a5; padding: 8px 14px; border-radius: 20px;
-            font-size: 0.78rem; font-weight: 700; text-decoration: none;
-            transition: all 0.2s;
+            font-size: 0.78rem; font-weight: 600; text-decoration: none; transition: all 0.2s;
         }
         .logout-pill-btn:hover { background: #ef4444; color: #fff; }
 
@@ -91,16 +85,14 @@ if (strpos(strtolower($current_username), 'maryann') !== false || strpos(strtolo
         .message-row.them { align-self: flex-start; align-items: flex-start; }
 
         .bubble-reply-preview-node {
-            background: rgba(0, 0, 0, 0.25);
-            border-left: 3px solid #ec4899;
-            padding: 5px 10px; font-size: 0.78rem;
-            color: #94a3b8; border-radius: 6px; margin-bottom: 4px;
-            font-style: italic; max-width: 100%; word-break: break-word;
+            background: rgba(0, 0, 0, 0.25); border-left: 3px solid #ec4899;
+            padding: 5px 10px; font-size: 0.78rem; color: #94a3b8;
+            border-radius: 6px; margin-bottom: 4px; font-style: italic;
+            max-width: 100%; word-break: break-word;
         }
 
         .bubble-block {
-            padding: 11px 16px; border-radius: 20px;
-            font-size: 0.95rem; line-height: 1.4;
+            padding: 11px 16px; border-radius: 20px; font-size: 0.98rem; line-height: 1.4;
             word-break: break-word; cursor: pointer; transition: transform 0.1s;
         }
         .message-row.me .bubble-block { background: linear-gradient(135deg, #ec4899 0%, #be185d 100%); color: white; border-bottom-right-radius: 4px; }
@@ -163,7 +155,7 @@ if (strpos(strtolower($current_username), 'maryann') !== false || strpos(strtolo
         .message-input-bar {
             flex: 1; padding: 12px 18px; border-radius: 24px;
             border: 1px solid rgba(255, 255, 255, 0.1); outline: none;
-            font-size: 0.92rem; color: #ffffff; background: rgba(0, 0, 0, 0.4);
+            font-size: 0.95rem; color: #ffffff; background: rgba(0, 0, 0, 0.4);
         }
         .message-input-bar:focus { border-color: #ec4899; }
 
@@ -198,9 +190,8 @@ if (strpos(strtolower($current_username), 'maryann') !== false || strpos(strtolo
 <div class="premium-container">
     <div class="glass-header">
         <div class="user-meta-info">
-            <h3>Our Private Space 💕</h3>
-            <p style="font-size:0.85rem; font-weight:bold; color:#ec4899; margin-bottom:2px;">You: <?php echo $roleTitle; ?></p>
-            <p><span class="status-dot" id="partnerStatusDot"></span> <span id="partnerStatusLabel"><?php echo $partnerTitle; ?> status...</span></p>
+            <h3>King 👑 Queen</h3>
+            <p><span class="status-dot" id="partnerStatusDot"></span> <span id="partnerStatusLabel">Checking activity...</span></p>
         </div>
         <div class="header-actions">
             <button class="action-circle-btn" onclick="openCallModalWindow()">📞</button>
@@ -229,7 +220,6 @@ if (strpos(strtolower($current_username), 'maryann') !== false || strpos(strtolo
 
 <script>
 const activeProfileSessionID = <?php echo $current_user_id; ?>;
-const partnerDesignationText = "<?php echo $partnerTitle; ?>";
 let localViewDatasetCache = [];
 let currentActiveReplyMessageString = null;
 
@@ -237,15 +227,15 @@ function syncChatLogsPayload() {
     fetch('fetch_messages.php')
     .then(res => res.json())
     .then(data => {
-        // Handle partner online/offline status UI updates dynamically
         const statusDot = document.getElementById('partnerStatusDot');
         const statusLabel = document.getElementById('partnerStatusLabel');
+        
         if (data.partner_online) {
             statusDot.className = "status-dot online";
-            statusLabel.textContent = `${partnerDesignationText} is Online`;
+            statusLabel.textContent = "Partner is Online";
         } else {
             statusDot.className = "status-dot";
-            statusLabel.textContent = `${partnerDesignationText} is Offline`;
+            statusLabel.textContent = "Partner is Offline";
         }
 
         const payload = data.messages || [];
@@ -267,7 +257,6 @@ function syncChatLogsPayload() {
                 replyHTML = `<div class="bubble-reply-preview-node">⤺ ${item.reply_to_text}</div>`;
             }
 
-            // Create read status ticks indicators layer
             let tickHTML = '';
             if (isSelfOwned) {
                 const isSeen = parseInt(item.is_read) === 1;
@@ -283,20 +272,19 @@ function syncChatLogsPayload() {
                 </div>
             `;
             
-            // Explicitly apply raw text safely to bypass extraction template bugs
             containerRow.querySelector('.bubble-block').textContent = targetText;
             
             containerRow.querySelector('.bubble-block').addEventListener('click', function(e) {
-                renderContextPopoverMenu(e, item.id, targetText);
+                renderContextPopoverMenu(e, targetText);
             });
 
             viewer.appendChild(containerRow);
         });
         viewer.scrollTop = viewer.scrollHeight;
-    }).catch(err => console.log("Poller connection error. Make sure fetch_messages.php is active."));
+    }).catch(err => console.log("Stream synchronization check error..."));
 }
 
-function renderContextPopoverMenu(e, msgId, contentText) {
+function renderContextPopoverMenu(e, contentText) {
     e.stopPropagation();
     const menu = document.getElementById('globalContextMenuNode');
     
@@ -353,16 +341,15 @@ function closeCallModalWindow() { document.getElementById('callModalShell').styl
 
 function triggerCallConnection(type) { 
     closeCallModalWindow();
-    displayStatusBannerToast(`Connecting secure private ${type} link channels... 💖`, type === 'Voice' ? '📞' : '📹');
+    displayStatusBannerToast(`Connecting private ${type} channels... 💖`, type === 'Voice' ? '📞' : '📹');
 }
 
 function triggerVoiceRecorderEngine() { 
-    displayStatusBannerToast("Listening system lines active... Recording voice note! 🎙️❤️", "🎙️");
+    displayStatusBannerToast("Listening lines active... Recording voice note! 🎙️❤️", "🎙️");
 }
 
 document.addEventListener('click', () => { document.getElementById('globalContextMenuNode').style.display = 'none'; });
 
-// Initialize real-time poll execution engines
 syncChatLogsPayload();
 setInterval(syncChatLogsPayload, 2000);
 </script>

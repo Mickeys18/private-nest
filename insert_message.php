@@ -7,56 +7,66 @@ require_once "config.php";
 header('Content-Type: application/json');
 
 if (!isset($_SESSION["loggedin"]) || $_SESSION["loggedin"] !== true) {
-    echo json_encode(["status" => "error", "message" => "Unauthorized session handle"]);
+    echo json_encode(["status" => "error", "message" => "Unauthorized connection attempt"]);
     exit;
 }
 
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $user_id = isset($_SESSION["user_id"]) ? $_SESSION["user_id"] : (isset($_SESSION["id"]) ? $_SESSION["id"] : null);
-    $message_payload = isset($_POST['message']) ? trim($_POST['message']) : '';
+    $message_text = isset($_POST['message']) ? trim($_POST['message']) : '';
 
     if (!$user_id) {
-        echo json_encode(["status" => "error", "message" => "Session identity signature invalid"]);
+        echo json_encode(["status" => "error", "message" => "Invalid profile session signature"]);
         exit;
     }
-
-    if (empty($message_payload)) {
-        echo json_encode(["status" => "error", "message" => "Empty message rejected"]);
+    if (empty($message_text)) {
+        echo json_encode(["status" => "error", "message" => "Message payload was empty"]);
         exit;
     }
 
     try {
-        // Dynamic structural reflection discovery
-        $checkCols = $pdo->query("SHOW COLUMNS FROM messages");
-        $columns = $checkCols->fetchAll(PDO::FETCH_COLUMN);
+        // Look up the exact column layout of your messages table automatically
+        $stmtSchema = $pdo->query("SHOW COLUMNS FROM messages");
+        $allColumns = $stmtSchema->fetchAll(PDO::FETCH_COLUMN);
         
-        // Determine sender identification column
-        $userColumn = in_array('sender_id', $columns) ? 'sender_id' : 'user_id';
+        // 1. Resolve sender mapping key
+        $senderKey = in_array('sender_id', $allColumns) ? 'sender_id' : (in_array('user_id', $allColumns) ? 'user_id' : $allColumns[1]);
         
-        // Determine text payload content column (Handles message, msg_text, body structural variations)
-        if (in_array('message', $columns)) {
-            $textColumn = 'message';
-        } elseif (in_array('msg_text', $columns)) {
-            $textColumn = 'msg_text';
-        } elseif (in_array('body', $columns)) {
-            $textColumn = 'body';
-        } else {
-            // Fallback default setting
-            $textColumn = $columns[2]; 
+        // 2. Resolve body content column text mapping key
+        if (in_array('message', $allColumns)) { $textKey = 'message'; }
+        elseif (in_array('msg_text', $allColumns)) { $textKey = 'msg_text'; }
+        elseif (in_array('body', $allColumns)) { $textKey = 'body'; }
+        else { $textKey = $allColumns[2]; } // Fallback to index sequence
+        
+        // Build query fields dynamically based on columns found
+        $insertFields = ["$senderKey", "$textKey"];
+        $valuePlaceholders = [":user_id", ":message"];
+        
+        // 3. Optional columns handling: Check if status flag trackers exist before writing them
+        if (in_array('is_read', $allColumns)) {
+            $insertFields[] = 'is_read';
+            $valuePlaceholders[] = '0';
+        }
+        if (in_array('created_at', $allColumns)) {
+            $insertFields[] = 'created_at';
+            $valuePlaceholders[] = 'NOW()';
         }
         
-        $sql = "INSERT INTO messages ($userColumn, $textColumn, is_read, created_at) VALUES (:user_id, :message, 0, NOW())";
+        $fieldsString = implode(", ", $insertFields);
+        $valuesString = implode(", ", $valuePlaceholders);
+        
+        $sql = "INSERT INTO messages ($fieldsString) VALUES ($valuesString)";
         $stmt = $pdo->prepare($sql);
         $stmt->bindParam(":user_id", $user_id, PDO::PARAM_INT);
-        $stmt->bindParam(":message", $message_payload, PDO::PARAM_STR);
+        $stmt->bindParam(":message", $message_text, PDO::PARAM_STR);
         
         if ($stmt->execute()) {
             echo json_encode(["status" => "success"]);
         } else {
-            echo json_encode(["status" => "error", "message" => "Statement structural execution failure"]);
+            echo json_encode(["status" => "error", "message" => "Database rejected statement execution"]);
         }
     } catch (PDOException $e) {
-        echo json_encode(["status" => "error", "message" => "PDO Execution Exception Catch: " . $e->getMessage()]);
+        echo json_encode(["status" => "error", "message" => "Runtime schema fallback failure: " . $e->getMessage()]);
     }
 }
 ?>

@@ -23,154 +23,166 @@ $current_username = $_SESSION["username"];
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <style>
         :root {
-            --bg-gradient: linear-gradient(135deg, #1e3a8a 0%, #3b82f6 35%, #f472b6 70%, #fce7f3 100%);
-            --glass-panel: rgba(255, 255, 255, 0.22);
-            --glass-border: rgba(255, 255, 255, 0.4);
+            --bg-gradient: linear-gradient(135deg, #0f172a 0%, #1e3a8a 40%, #3b82f6 100%);
+            --glass-panel: rgba(255, 255, 255, 0.12);
+            --glass-border: rgba(255, 255, 255, 0.25);
             --bubble-me: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
-            --bubble-them: linear-gradient(135deg, #ec4899 0%, #db2777 100%);
+            --bubble-them: rgba(255, 255, 255, 0.2);
         }
 
         body {
             margin: 0; padding: 0;
             background: var(--bg-gradient);
-            background-size: 300% 300%;
-            animation: flowingGlow 15s ease infinite;
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
             display: flex; justify-content: center; align-items: center;
             height: 100vh; overflow: hidden;
         }
 
-        @keyframes flowingGlow {
-            0% { background-position: 0% 50%; }
-            50% { background-position: 100% 50%; }
-            100% { background-position: 0% 50%; }
-        }
-
         .premium-container {
             width: 100%; max-width: 420px; height: 92vh;
-            background: rgba(255, 255, 255, 0.15);
-            backdrop-filter: blur(25px);
-            -webkit-backdrop-filter: blur(25px);
-            border-radius: 40px;
-            border: 2px solid var(--glass-border);
-            box-shadow: 0 35px 80px rgba(0, 0, 0, 0.25);
+            background: rgba(255, 255, 255, 0.08);
+            backdrop-filter: blur(30px);
+            -webkit-backdrop-filter: blur(30px);
+            border-radius: 35px;
+            border: 1px solid var(--glass-border);
+            box-shadow: 0 40px 100px rgba(0, 0, 0, 0.4);
             display: flex; flex-direction: column; overflow: hidden;
             position: relative;
         }
 
-        /* Luxury Header section */
+        /* Top Bar Header Area */
         .glass-header {
-            padding: 18px 24px;
-            background: rgba(255, 255, 255, 0.25);
-            border-bottom: 1px solid rgba(255, 255, 255, 0.3);
+            padding: 16px 22px;
+            background: rgba(255, 255, 255, 0.1);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.15);
             display: flex; align-items: center; justify-content: space-between;
             z-index: 10;
         }
 
-        .user-meta-info h3 { margin: 0; color: #ffffff; font-size: 1.15rem; font-weight: 800; text-shadow: 0 2px 4px rgba(0,0,0,0.15); }
-        .user-meta-info p { margin: 4px 0 0 0; font-size: 0.78rem; color: #eff6ff; font-weight: 600; }
+        .user-meta-info h3 { margin: 0; color: #ffffff; font-size: 1.1rem; font-weight: 700; }
+        .user-meta-info p { margin: 3px 0 0 0; font-size: 0.75rem; color: #93c5fd; }
 
-        .header-actions { display: flex; gap: 10px; }
+        .header-actions { display: flex; gap: 12px; align-items: center; }
+        
         .action-circle-btn {
-            background: rgba(255, 255, 255, 0.3); border: 1px solid rgba(255, 255, 255, 0.4);
-            color: #ffffff; width: 42px; height: 42px; border-radius: 50%;
+            background: rgba(255, 255, 255, 0.15); border: 1px solid rgba(255, 255, 255, 0.2);
+            color: #ffffff; width: 40px; height: 40px; border-radius: 50%;
             display: flex; justify-content: center; align-items: center;
-            cursor: pointer; font-size: 1.1rem; text-decoration: none; transition: all 0.2s;
+            cursor: pointer; font-size: 1.05rem; text-decoration: none; transition: all 0.2s;
         }
-        .action-circle-btn:hover { background: #ffffff; color: #2563eb; transform: scale(1.08); }
+        .action-circle-btn:hover { background: rgba(255, 255, 255, 0.3); transform: scale(1.05); }
+        
+        /* Premium Glowing Red Logout Button */
+        .logout-pill-btn {
+            background: rgba(239, 68, 68, 0.2);
+            border: 1px solid rgba(239, 68, 68, 0.4);
+            color: #fca5a5; padding: 8px 14px; border-radius: 20px;
+            font-size: 0.78rem; font-weight: 700; text-decoration: none;
+            transition: all 0.2s; display: flex; align-items: center; gap: 6px;
+        }
+        .logout-pill-btn:hover {
+            background: rgba(239, 68, 68, 0.4);
+            box-shadow: 0 0 15px rgba(239, 68, 68, 0.3);
+            color: #ffffff;
+        }
 
-        /* The Chat Area Workspace */
+        /* Chat Logs Scroll Workspace */
         .chat-space {
-            flex: 1; padding: 25px 20px; overflow-y: auto;
-            display: flex; flex-direction: column; gap: 18px;
-            background: rgba(15, 23, 42, 0.05);
+            flex: 1; padding: 20px; overflow-y: auto;
+            display: flex; flex-direction: column; gap: 16px;
         }
 
-        /* Message Bubble Elements */
-        .message-row { display: flex; flex-direction: column; position: relative; max-width: 80%; clear: both; }
+        /* Message Bubble Engine */
+        .message-row { display: flex; flex-direction: column; position: relative; max-width: 75%; }
         .message-row.me { align-self: flex-end; align-items: flex-end; }
         .message-row.them { align-self: flex-start; align-items: flex-start; }
 
         .bubble-block {
-            padding: 14px 18px; border-radius: 24px;
-            font-size: 0.98rem; line-height: 1.45; font-weight: 500;
-            position: relative; cursor: pointer; transition: transform 0.15s;
+            padding: 12px 16px; border-radius: 20px;
+            font-size: 0.95rem; line-height: 1.4; font-weight: 500;
+            word-break: break-word; cursor: pointer; transition: transform 0.1s;
         }
-        .message-row.me .bubble-block { background: var(--bubble-me); color: white; border-bottom-right-radius: 4px; box-shadow: 0 6px 15px rgba(37, 99, 235, 0.25); }
-        .message-row.them .bubble-block { background: var(--bubble-them); color: white; border-bottom-left-radius: 4px; box-shadow: 0 6px 15px rgba(236, 72, 153, 0.25); }
+        .message-row.me .bubble-block { background: var(--bubble-me); color: white; border-bottom-right-radius: 4px; }
+        .message-row.them .bubble-block { background: var(--bubble-them); color: #f8fafc; border-bottom-left-radius: 4px; border: 1px solid rgba(255,255,255,0.1); }
         .bubble-block:hover { transform: scale(1.02); }
 
-        .time-stamp { font-size: 0.68rem; color: rgba(255, 255, 255, 0.85); margin-top: 5px; font-weight: 700; text-shadow: 0 1px 2px rgba(0,0,0,0.1); }
+        .time-stamp { font-size: 0.65rem; color: rgba(255, 255, 255, 0.5); margin-top: 4px; padding: 0 4px; }
 
-        /* The Fixed, Beautiful Context Menu Context Overlay */
-        .custom-context-menu {
-            display: none; position: absolute; background: white;
-            border-radius: 14px; box-shadow: 0 10px 30px rgba(0,0,0,0.18);
-            z-index: 999; width: 110px; overflow: hidden; border: 1px solid #e2e8f0;
+        /* Dynamic Status Feedback Banner Overlay */
+        .status-alert-banner {
+            display: none; position: absolute; top: 80px; left: 50%; transform: translateX(-50%);
+            background: rgba(15, 23, 42, 0.85); border: 1px solid rgba(255, 255, 255, 0.2);
+            padding: 10px 20px; border-radius: 30px; color: #ffffff; font-size: 0.85rem;
+            font-weight: 600; z-index: 1000; backdrop-filter: blur(10px);
+            box-shadow: 0 10px 25px rgba(0,0,0,0.3); align-items: center; gap: 8px;
         }
-        .custom-context-menu button {
-            background: none; border: none; padding: 10px 14px; width: 100%;
-            text-align: left; font-size: 0.8rem; font-weight: 700; cursor: pointer;
-            color: #334155; display: flex; align-items: center; gap: 8px; transition: background 0.2s;
-        }
-        .custom-context-menu button:hover { background: #f1f5f9; color: #000; }
-        .custom-context-menu button.delete-btn { color: #ef4444; }
-        .custom-context-menu button.delete-btn:hover { background: #fee2e2; }
 
-        /* Call Modal Selection Window Box Layout */
+        /* Call Modal Overlay Selection Box */
         .call-modal-overlay {
             display: none; position: absolute; top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(15, 23, 42, 0.6); backdrop-filter: blur(8px);
+            background: rgba(15, 23, 42, 0.7); backdrop-filter: blur(12px);
             justify-content: center; align-items: center; z-index: 2000;
         }
         .call-card {
-            background: white; width: 80%; max-width: 290px; padding: 25px;
-            border-radius: 30px; text-align: center; box-shadow: 0 20px 50px rgba(0,0,0,0.3);
-            animation: popUp 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            background: #1e293b; border: 1px solid rgba(255,255,255,0.15);
+            width: 80%; max-width: 280px; padding: 22px;
+            border-radius: 28px; text-align: center; box-shadow: 0 25px 60px rgba(0,0,0,0.5);
         }
-        @keyframes popUp { from { transform: scale(0.8); opacity: 0; } to { transform: scale(1); opacity: 1; } }
-        .call-card h4 { margin: 0 0 10px 0; font-size: 1.1rem; color: #1e293b; font-weight: 800; }
-        .call-card p { margin: 0 0 20px 0; font-size: 0.85rem; color: #64748b; }
+        .call-card h4 { margin: 0 0 8px 0; font-size: 1.1rem; color: #ffffff; }
+        .call-card p { margin: 0 0 18px 0; font-size: 0.8rem; color: #94a3b8; }
         .call-options-grid { display: flex; flex-direction: column; gap: 10px; }
         .modal-call-btn {
-            padding: 12px; border-radius: 16px; border: none; font-weight: 700;
-            font-size: 0.95rem; cursor: pointer; display: flex; justify-content: center; align-items: center; gap: 10px; transition: 0.2s;
+            padding: 12px; border-radius: 14px; border: none; font-weight: 700;
+            font-size: 0.9rem; cursor: pointer; display: flex; justify-content: center; align-items: center; gap: 8px; transition: 0.2s;
         }
-        .modal-call-btn.voice { background: #eff6ff; color: #2563eb; }
-        .modal-call-btn.voice:hover { background: #dbeafe; }
-        .modal-call-btn.video { background: #fdf2f8; color: #ec4899; }
-        .modal-call-btn.video:hover { background: #fce7f3; }
-        .modal-call-btn.cancel { background: #f1f5f9; color: #64748b; margin-top: 5px; }
+        .modal-call-btn.voice { background: rgba(59, 130, 246, 0.2); color: #60a5fa; border: 1px solid rgba(59, 130, 246, 0.4); }
+        .modal-call-btn.video { background: rgba(236, 72, 153, 0.2); color: #f472b6; border: 1px solid rgba(236, 72, 153, 0.4); }
+        .modal-call-btn.cancel { background: transparent; color: #94a3b8; }
 
-        /* Footer Input Actions Group Layout Area */
+        /* The Fixed, Mini Context Context Menu Overlay */
+        .custom-context-menu {
+            display: none; position: absolute; background: #1e293b;
+            border-radius: 12px; box-shadow: 0 10px 25px rgba(0,0,0,0.4);
+            z-index: 999; width: 110px; overflow: hidden; border: 1px solid rgba(255,255,255,0.15);
+        }
+        .custom-context-menu button {
+            background: none; border: none; padding: 10px 14px; width: 100%;
+            text-align: left; font-size: 0.8rem; font-weight: 600; cursor: pointer;
+            color: #e2e8f0; display: flex; align-items: center; gap: 8px;
+        }
+        .custom-context-menu button:hover { background: rgba(255,255,255,0.1); }
+        .custom-context-menu button.delete-btn { color: #f87171; }
+
+        /* Bottom Entry Action Layout Footer */
         .glass-footer {
-            padding: 16px 20px; background: rgba(255, 255, 255, 0.2);
-            border-top: 1px solid rgba(255, 255, 255, 0.25);
-            display: flex; align-items: center; gap: 12px;
+            padding: 14px 18px; background: rgba(255, 255, 255, 0.05);
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+            display: flex; align-items: center; gap: 10px;
         }
         .message-input-bar {
-            flex: 1; padding: 14px 20px; border-radius: 30px;
-            border: 2px solid rgba(255, 255, 255, 0.4); outline: none;
-            font-size: 0.98rem; color: #ffffff; background: rgba(255, 255, 255, 0.15);
+            flex: 1; padding: 12px 18px; border-radius: 24px;
+            border: 1px solid rgba(255, 255, 255, 0.2); outline: none;
+            font-size: 0.95rem; color: #ffffff; background: rgba(0, 0, 0, 0.2);
         }
-        .message-input-bar::placeholder { color: rgba(255, 255, 255, 0.75); }
-        .message-input-bar:focus { border-color: #ffffff; background: rgba(255, 255, 255, 0.25); }
+        .message-input-bar::placeholder { color: rgba(255, 255, 255, 0.4); }
+        .message-input-bar:focus { border-color: #3b82f6; }
 
         .media-circle-action {
-            background: white; border: none; width: 46px; height: 46px;
-            border-radius: 50%; display: flex; justify-content: center; align-items: center;
-            cursor: pointer; font-size: 1.15rem; box-shadow: 0 4px 12px rgba(0,0,0,0.1); transition: 0.2s;
+            background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.15); 
+            width: 42px; height: 42px; border-radius: 50%; display: flex; 
+            justify-content: center; align-items: center; cursor: pointer; font-size: 1rem; color: white;
         }
-        .media-circle-action:hover { transform: scale(1.06); }
-        .media-circle-action.send-accent { background: #ffffff; color: #2563eb; }
+        .media-circle-action.send-accent { background: #3b82f6; border: none; }
     </style>
 </head>
 <body>
 
+<div class="status-alert-banner" id="statusToastNotifier"></div>
+
 <div class="call-modal-overlay" id="callModalShell">
     <div class="call-card">
         <h4>Connect Line 🌸</h4>
-        <p>Choose your communication pathway:</p>
+        <p>Choose your pathway:</p>
         <div class="call-options-grid">
             <button class="modal-call-btn voice" onclick="triggerCallConnection('Voice')">📞 Voice Call</button>
             <button class="modal-call-btn video" onclick="triggerCallConnection('Video')">📹 Video Call</button>
@@ -187,12 +199,12 @@ $current_username = $_SESSION["username"];
 <div class="premium-container">
     <div class="glass-header">
         <div class="user-meta-info">
-            <h3>Our Private Space 💕</h3>
+            <h3>Our Private Space 💙</h3>
             <p>Active: ✨ <?php echo htmlspecialchars($current_username); ?></p>
         </div>
         <div class="header-actions">
             <button class="action-circle-btn" onclick="openCallModalWindow()">📞</button>
-            <a href="logout.php" class="action-circle-btn">🚪</a>
+            <a href="logout.php" class="logout-pill-btn">❌ Logout</a>
         </div>
     </div>
 
@@ -208,7 +220,6 @@ $current_username = $_SESSION["username"];
 <script>
 const activeProfileSessionID = <?php echo $current_user_id; ?>;
 let localViewDatasetCache = [];
-let currentlySelectedMsgId = null;
 
 function syncChatLogsPayload() {
     fetch('fetch_messages.php')
@@ -225,16 +236,19 @@ function syncChatLogsPayload() {
             const containerRow = document.createElement('div');
             containerRow.className = `message-row ${isSelfOwned ? 'me' : 'them'}`;
             
+            // Critical Fix: Explicitly parse item.message_text inside standard text nodes to guarantee output
             containerRow.innerHTML = `
-                <div class="bubble-block" data-msg-id="${item.id}" data-body="${escapeHtmlAttribute(item.message_text)}">
-                    ${escapeHtmlEntities(item.message_text)}
-                </div>
+                <div class="bubble-block" id="bubble_node_${item.id}"></div>
                 <div class="time-stamp">${item.stamp_time || 'Just now'}</div>
             `;
             
-            // Context menu listener trigger registration
+            // Assign explicitly as textContent to avoid raw blank spaces or script interpretation failures
+            const textContentBody = item.message_text || item.message || "Empty message container";
+            containerRow.querySelector('.bubble-block').textContent = textContentBody;
+            
+            // Bind right click or click events for context popups securely
             containerRow.querySelector('.bubble-block').addEventListener('click', function(e) {
-                renderContextPopoverMenu(e, item.id, isSelfOwned, item.message_text);
+                renderContextPopoverMenu(e, item.id, isSelfOwned, textContentBody);
             });
 
             viewer.appendChild(containerRow);
@@ -258,20 +272,18 @@ function processMessageSubmission(e) {
     .then(r => r.json())
     .then(res => {
         if(res.status === 'success') { syncChatLogsPayload(); }
-        else { alert("Error writing entry: " + res.message); }
     });
 }
 
 function renderContextPopoverMenu(e, msgId, isSelfOwned, contentText) {
     e.stopPropagation();
-    currentlySelectedMsgId = msgId;
     const menu = document.getElementById('globalContextMenuNode');
     
     menu.style.display = 'block';
     menu.style.left = `${Math.min(e.pageX, window.innerWidth - 130)}px`;
     menu.style.top = `${Math.min(e.pageY, window.innerHeight - 100)}px`;
     
-    // Wire up events cleanly
+    // Wire up mini reply input box mapping explicitly 
     document.getElementById('ctxReplyHandler').onclick = () => {
         const input = document.getElementById('chatMessageBoxInput');
         input.value = `Replying to ("${contentText}"): `;
@@ -288,30 +300,38 @@ function renderContextPopoverMenu(e, msgId, isSelfOwned, contentText) {
 }
 
 function executeRowDeletionsEngine(msgId) {
-    if(!confirm("Remove this message record? 🌸")) return;
     const payloadForm = new FormData();
     payloadForm.append('message_id', msgId);
-    
     fetch('delete_message.php', { method: 'POST', body: payloadForm })
     .then(r => r.json())
-    .then(res => {
-        if(res.status === 'success') { syncChatLogsPayload(); }
-    });
+    .then(res => { if(res.status === 'success') { syncChatLogsPayload(); } });
+}
+
+/* Luxury Status Feedback replacement loops (No more ugly alerts!) */
+function displayStatusBannerToast(text, emoji) {
+    const toast = document.getElementById('statusToastNotifier');
+    toast.innerHTML = `<span>${emoji}</span> ${text}`;
+    toast.style.display = 'flex';
+    setTimeout(() => { toast.style.display = 'none'; }, 4000);
 }
 
 function openCallModalWindow() { document.getElementById('callModalShell').style.display = 'flex'; }
 function closeCallModalWindow() { document.getElementById('callModalShell').style.display = 'none'; }
-function triggerCallConnection(type) { alert(`💖 Initializing private ${type} connection stream route secure channels... 🔒✨`); closeCallModalWindow(); }
-function triggerVoiceRecorderEngine() { alert("🎙️ Listening line container streaming live notes now... ❤️🎵"); }
 
-function escapeHtmlEntities(str) { return str ? str.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;") : ''; }
-function escapeHtmlAttribute(str) { return str ? str.replace(/"/g, "&quot;").replace(/'/g, "&#039;") : ''; }
+function triggerCallConnection(type) { 
+    closeCallModalWindow();
+    displayStatusBannerToast(`Calling line active... Connecting secure private ${type} link channels! ✨`, type === 'Voice' ? '📞' : '📹');
+}
+
+function triggerVoiceRecorderEngine() { 
+    displayStatusBannerToast("Listening system lines active... Streaming your voice note notes down now! ❤️🎵", "🎙️");
+}
 
 document.addEventListener('click', () => { document.getElementById('globalContextMenuNode').style.display = 'none'; });
 
-// Initialise pooling loop background cycle sequence instantly
+// Continuous pool sequence looping sync updates
 syncChatLogsPayload();
-setInterval(syncChatLogsPayload, 2000);
+setInterval(syncChatLogsPayload, 1500);
 </script>
 </body>
 </html>

@@ -1,7 +1,12 @@
 <?php
-require_once "config.php";
-if (!isset($_SESSION["loggedin"]) || $_SESSION["loggedin"] !== true) { header("location: login.php"); exit; }
-$user_id = $_SESSION["user_id"]; $username = $_SESSION["username"];
+if (session_status() === PHP_SESSION_NONE) {
+    session_start();
+}
+if (!isset($_SESSION["loggedin"]) || $_SESSION["loggedin"] !== true) {
+    header("location: login.php");
+    exit;
+}
+$current_user = isset($_SESSION["username"]) ? $_SESSION["username"] : "user";
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -10,374 +15,271 @@ $user_id = $_SESSION["user_id"]; $username = $_SESSION["username"];
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Our Private Nest 🌸</title>
     <style>
-        body { font-family: 'Segoe UI', Roboto, Helvetica, sans-serif; background: #fff1f2; margin: 0; display: flex; justify-content: center; align-items: center; height: 100vh; overflow: hidden; }
+        body { font-family: 'Segoe UI', Roboto, sans-serif; background: #fff1f2; margin: 0; display: flex; justify-content: center; align-items: center; height: 100vh; }
+        .chat-container { width: 100%; max-width: 450px; height: 90vh; background: #ffffff; box-shadow: 0 20px 50px rgba(244, 63, 94, 0.15); border-radius: 36px; display: flex; flex-direction: column; overflow: hidden; border: 2px solid #ffe4e6; position: relative; }
         
-        .chat-container { width: 100%; max-width: 440px; height: 95vh; background: #ffffff; box-shadow: 0 20px 50px rgba(244, 63, 94, 0.15); border-radius: 36px; display: flex; flex-direction: column; overflow: hidden; border: 2px solid #ffe4e6; position: relative; }
+        .chat-header { background: #fff1f2; padding: 15px 20px; border-bottom: 2px dashed #fba1b7; display: flex; justify-content: space-between; align-items: center; }
+        .chat-header h2 { font-size: 1.1rem; color: #ff4d6d; margin: 0; font-weight: bold; }
         
-        .chat-header { background: linear-gradient(135deg, #fba1b7, #ffd1da); color: #ff4d6d; padding: 16px 20px; text-align: center; font-size: 1.15rem; font-weight: bold; display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #ffe4e6; }
-        .btn-header-nav { background: #ffffff; color: #ff4d6d; border: 1px solid #ffccd5; padding: 6px 14px; border-radius: 20px; cursor: pointer; font-weight: 700; font-size: 0.82rem; text-decoration: none; display: flex; align-items: center; transition: all 0.2s; }
-        .btn-header-nav:hover { background: #fff5f6; transform: scale(1.04); }
-
-        .context-area { background: #fff5f6; border-bottom: 1px dashed #ffccd5; padding: 10px 20px; display: flex; justify-content: space-between; align-items: center; font-size: 0.82rem; color: #ff758f; font-weight: 600; }
-        .status-dot { width: 8px; height: 8px; background: #f43f5e; border-radius: 50%; }
-
-        /* The Main Chat Room Canvas Feed styling */
-        .chat-messages { flex: 1; padding: 20px; overflow-y: auto; background: #fffbfb; display: flex; flex-direction: column; position: relative; }
+        .status-bar { background: #fffcfd; padding: 6px 15px; border-bottom: 1px solid #ffe4e6; display: flex; justify-content: space-between; font-size: 0.75rem; color: #ff758f; font-weight: 500; }
         
-        /* Modern Structured WhatsApp/Telegram Aesthetic Rows */
-        .message-row { display: flex; width: 100%; position: relative; margin-bottom: 8px; }
-        .sent-wrapper { justify-content: flex-end; }
-        .received-wrapper { justify-content: flex-start; }
-
-        .bubble-container { display: flex; align-items: center; gap: 8px; max-width: 80%; position: relative; }
-        .sent-wrapper .bubble-container { flex-direction: row; }
-        .received-wrapper .bubble-container { flex-direction: row; }
-
-        /* Elegant Bubbly Sweetheart Interface Styling */
-        .message-bubble { padding: 12px 16px; border-radius: 22px; font-size: 0.95rem; line-height: 1.4; word-wrap: break-word; box-shadow: 0 3px 8px rgba(244,63,94,0.04); display: inline-block; position: relative; }
-        .sent-bubble { background: #ffe4e6; color: #881337; border-bottom-right-radius: 4px; }
-        .received-bubble { background: #f1f5f9; color: #1e293b; border-bottom-left-radius: 4px; }
-        .deleted-bubble { font-style: italic; opacity: 0.5; background: #f8fafc !important; color: #94a3b8 !important; border-radius: 12px !important; }
-
-        /* Inline Timestamp Metas */
-        .bubble-meta { display: flex; justify-content: flex-end; align-items: center; gap: 4px; font-size: 0.68rem; margin-top: 5px; opacity: 0.7; font-weight: 500; }
-        .sent-bubble .bubble-meta { color: #9d174d; }
-        .received-bubble .bubble-meta { color: #64748b; }
-
-        .reply-line { background: rgba(0,0,0,0.04); padding: 5px 8px; border-left: 2px solid #ff758f; border-radius: 6px; font-size: 0.78rem; margin-bottom: 5px; color: #be185d; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-
-        /* 3-Dots Action Button (Perfect Alignment visibility toggle) */
-        .three-dots-trigger { background: none; border: none; color: #fda4af; cursor: pointer; font-size: 1.2rem; padding: 4px 8px; border-radius: 50%; display: flex; align-items: center; justify-content: center; transition: all 0.2s; user-select: none; }
-        .three-dots-trigger:hover { color: #ff4d6d; background: #fff1f2; }
-
-        /* Dynamic Popover Dropdown Styling Panels (Anchored directly to the bubble container) */
-        .action-dropdown-list { 
-            display: none; 
-            position: absolute; 
-            background: #ffffff; 
-            border: 1px solid #ffe4e6; 
-            border-radius: 16px; 
-            box-shadow: 0 10px 25px rgba(244,63,94,0.1); 
-            z-index: 999; 
-            min-width: 110px; 
-            overflow: hidden; 
-        }
+        .chat-messages { flex: 1; padding: 20px; overflow-y: auto; background: #ffffff; display: flex; flex-direction: column; gap: 16px; }
+        .msg-wrapper { display: flex; flex-direction: column; max-width: 75%; }
+        .msg-wrapper.me { align-self: flex-end; align-items: flex-end; }
+        .msg-wrapper.her { align-self: flex-start; align-items: flex-start; }
         
-        /* Intelligently snap dropdowns directly relative to message alignment boundaries */
-        .sent-wrapper .action-dropdown-list { 
-            right: 32px; 
-            top: 12px; 
-        }
-        .received-wrapper .action-dropdown-list { 
-            left: 32px; 
-            top: 12px; 
-        }
-
-        .dropdown-option { padding: 10px 14px; font-size: 0.85rem; color: #475569; cursor: pointer; font-weight: 600; text-align: left; transition: background 0.2s; }
-        .dropdown-option:hover { background: #fff5f6; color: #ff4d6d; }
-        .dropdown-option.option-unsend { color: #dc2626; border-top: 1px solid #f1f5f9; }
-        .dropdown-option.option-unsend:hover { background: #fef2f2; }
-
-        /* Sub-navigation Headers Tracking boxes */
-        #reply-preview-box { display: none; background: #fff5f6; border-top: 1px solid #ffccd5; padding: 8px 20px; justify-content: space-between; align-items: center; font-size: 0.85rem; color: #ff4d6d; font-weight: 600; }
-        #edit-preview-box { display: none; background: #f0fdf4; border-top: 1px solid #bbf7d0; padding: 8px 20px; justify-content: space-between; align-items: center; font-size: 0.85rem; color: #16a34a; font-weight: 600; }
-
-        .chat-input-area { padding: 15px; background: #ffffff; display: flex; gap: 10px; align-items: center; border-top: 1px solid #ffe4e6; }
-        .chat-input { flex: 1; padding: 14px 20px; border: 2px solid #fff0f2; background: #fffcfd; border-radius: 30px; outline: none; font-size: 0.95rem; }
+        .reply-context { font-size: 0.75rem; color: #2563eb; margin-bottom: 2px; font-style: italic; background: #eff6ff; padding: 2px 6px; border-radius: 6px; border-left: 2px solid #3b82f6; }
         
-        .btn-action-circle { border: none; width: 44px; height: 44px; border-radius: 50%; cursor: pointer; display: flex; justify-content: center; align-items: center; font-size: 1.15rem; color: white; }
-        .btn-send { background: #ff758f; } .btn-send:hover { background: #ff4d6d; }
-        .btn-mic { background: #c084fc; }  .btn-mic.recording { background: #f43f5e; animation: pulseGlow 1s infinite; }
+        .msg-bubble { padding: 12px 18px; border-radius: 22px; font-size: 0.95rem; word-break: break-word; box-shadow: 0 2px 5px rgba(0,0,0,0.02); }
+        .me .msg-bubble { background: #ff758f; color: white; border-bottom-right-radius: 4px; }
+        .her .msg-bubble { background: #fffcfd; color: #881337; border-bottom-left-radius: 4px; border: 1px solid #ffe4e6; }
         
-        .falling-emoji { position: absolute; pointer-events: none; font-size: 24px; animation: floatUp 1.2s ease-out forwards; z-index: 1000; }
-        @keyframes floatUp { 0% { transform: translateY(0) scale(0.6); opacity: 1; } 100% { transform: translateY(-90px) scale(1.3); opacity: 0; } }
+        /* 🔵 BLUE & WHITE MINI MENUS */
+        .msg-meta-subbar { display: flex; width: 100%; justify-content: space-between; align-items: center; font-size: 0.7rem; margin-top: 4px; color: #60a5fa; }
+        .msg-actions { display: flex; gap: 10px; background: #eff6ff; padding: 3px 8px; border-radius: 12px; border: 1px solid #bfdbfe; }
+        .msg-actions span { cursor: pointer; font-weight: 600; color: #2563eb; }
+        .msg-actions span:hover { color: #1d4ed8; text-decoration: underline; }
+        
+        .receipt-mark { font-weight: bold; font-size: 0.75rem; }
+        .receipt-mark.seen { color: #3b82f6; } /* Blue double check for read */
 
-        .video-overlay { display: none; position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: #1c0a10; z-index: 9999; flex-direction: column; }
-        .video-viewports { flex: 1; position: relative; display: flex; flex-direction: column; width: 100%; height: 100%; }
-        .video-box { flex: 1; width: 100%; background: #2d121c; position: relative; display: flex; justify-content: center; align-items: center; overflow: hidden; }
-        .video-box video { width: 100%; height: 100%; object-fit: cover; }
-        .video-label { position: absolute; bottom: 15px; left: 15px; background: rgba(0, 0, 0, 0.5); color: white; padding: 4px 12px; border-radius: 12px; font-size: 0.8rem; }
-        .video-controls { padding: 25px; display: flex; justify-content: center; position: absolute; bottom: 0; left: 0; width: 100%; box-sizing: border-box; }
-        .btn-hangup { background: #f43f5e; color: white; border: none; padding: 14px 40px; border-radius: 30px; font-weight: bold; cursor: pointer; }
-        audio { max-width: 100%; margin-top: 4px; }
-        @keyframes pulseGlow { 0% { transform: scale(1); } 50% { transform: scale(1.05); } 100% { transform: scale(1); } }
+        .reply-dock { background: #eff6ff; padding: 8px 15px; border-top: 1px solid #bfdbfe; display: none; justify-content: space-between; align-items: center; font-size: 0.8rem; color: #1e3a8a; }
+        .reply-dock span { cursor: pointer; font-weight: bold; background: #ffffff; padding: 2px 6px; border-radius: 4px; color: #dc2626; }
+
+        .chat-input-area { padding: 15px; background: #fffcfd; border-top: 1px solid #ffe4e6; display: flex; align-items: center; gap: 10px; }
+        .message-input { flex: 1; padding: 12px 20px; border: 2px solid #fff0f2; background: #fffcfd; border-radius: 30px; outline: none; font-size: 0.95rem; }
+        
+        .btn { border: none; padding: 8px 14px; border-radius: 20px; font-weight: bold; font-size: 0.85rem; cursor: pointer; text-decoration: none; }
+        .btn-logout { background: #fff; color: #ff4d6d; border: 1px solid #fba1b7; }
+        .btn-call { background: #2563eb; color: #fff; box-shadow: 0 4px 10px rgba(37, 99, 235, 0.3); }
+        
+        .btn-round { width: 42px; height: 42px; border-radius: 50%; display: flex; justify-content: center; align-items: center; border: none; cursor: pointer; color: white; }
+        .btn-mic { background: #a78bfa; font-size: 1.1rem; }
+        .btn-mic.recording { background: #ef4444; animation: pulse 1.5s infinite; }
+        .btn-send { background: #ff758f; font-size: 1.2rem; }
+        
+        /* 🔵 BLUE & WHITE CALL MODAL */
+        .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(15, 23, 42, 0.6); justify-content: center; align-items: center; z-index: 999; backdrop-filter: blur(3px); }
+        .modal-content { background: #ffffff; padding: 25px; border-radius: 24px; text-align: center; width: 80%; max-width: 320px; box-shadow: 0 20px 40px rgba(0,0,0,0.2); border: 2px solid #bfdbfe; }
+        .modal-content h3 { margin-top: 0; color: #1e3a8a; font-size: 1.3rem; }
+        .modal-btn { display: block; width: 100%; padding: 14px; margin: 12px 0; border: none; border-radius: 14px; font-weight: bold; cursor: pointer; font-size: 1rem; transition: 0.2s; }
+        .btn-voice { background: #eff6ff; color: #2563eb; border: 1px solid #bfdbfe; }
+        .btn-voice:hover { background: #dbeafe; }
+        .btn-video { background: #2563eb; color: #ffffff; }
+        .btn-video:hover { background: #1d4ed8; }
+        .btn-cancel { background: #f1f5f9; color: #64748b; margin-top: 20px; }
+
+        audio { max-width: 100%; margin-top: 4px; border-radius: 10px; }
+        @keyframes pulse { 0% { transform: scale(1); } 70% { transform: scale(1.05); } 100% { transform: scale(1); } }
     </style>
 </head>
 <body>
 
 <div class="chat-container">
     <div class="chat-header">
-        <a href="logout.php" class="btn-header-nav">🏠 Home</a>
-        <span>Our Private Space 💕</span>
-        <button class="btn-header-nav" id="call-start-btn">📞 Call</button>
+        <a href="logout.php" class="btn btn-logout">🚪 Logout</a>
+        <h2>Our Private Space 💕</h2>
+        <button class="btn btn-call" id="callMenuBtn">📞 Call</button>
     </div>
     
-    <div class="context-area">
-        <div class="context-status">
-            <span class="status-dot"></span>
-            <span>hi sweetie, <strong><?= htmlspecialchars($username) ?></strong> ✨</span>
-        </div>
-        <div>🌸 Secure Sync Active</div>
+    <div class="status-bar">
+        <span>Hey <strong id="myNameDisplay"></strong> ✨</span>
+        <span id="partnerStatusText">⚪ Checking status...</span>
     </div>
-    
-    <div class="chat-messages" id="chat-box" onclick="closeAllMenus()"></div>
-    
-    <div id="reply-preview-box">
-        <span id="reply-preview-text">Replying...</span>
-        <span onclick="cancelReplyMode()" style="cursor:pointer; font-weight:bold; color:#ff4d6d;">✖</span>
-    </div>
-    <div id="edit-preview-box">
-        <span id="edit-preview-text">Editing message...</span>
-        <span onclick="cancelEditMode()" style="cursor:pointer; font-weight:bold; color:#16a34a;">✖</span>
+
+    <div class="chat-messages" id="chatBox"></div>
+
+    <div class="reply-dock" id="replyDock">
+        <div id="replyDockText">Replying to...</div>
+        <span id="cancelReplyBtn">✕ Cancel</span>
     </div>
 
     <div class="chat-input-area">
-        <button class="btn-action-circle btn-mic" id="mic-btn">🎙️</button>
-        <input type="text" class="chat-input" id="text-input" placeholder="Type a lovely message...">
-        <button class="btn-action-circle btn-send" id="send-btn">💝</button>
+        <button type="button" class="btn btn-round btn-mic" id="micBtn">🎙️</button>
+        <input type="text" id="msgInput" class="message-input" placeholder="Type a message...">
+        <button id="sendBtn" class="btn btn-round btn-send">💝</button>
     </div>
 </div>
 
-<div class="video-overlay" id="video-overlay-pane">
-    <div class="video-viewports">
-        <div class="video-box"><video id="remote-video" autoplay playsinline></video><div class="video-label">Her Camera ✨</div></div>
-        <div class="video-box" style="border-top: 2px solid #ffccd5;"><video id="local-video" autoplay playsinline muted></video><div class="video-label">Your Camera</div></div>
+<div class="modal" id="callModal">
+    <div class="modal-content">
+        <h3>Connect with Ryry 💙</h3>
+        <p style="font-size: 0.85rem; color: #64748b; margin-bottom: 20px;">Secure Private Line</p>
+        <button class="modal-btn btn-video" onclick="triggerCall(true)">📹 Start Video Call</button>
+        <button class="modal-btn btn-voice" onclick="triggerCall(false)">🔊 Start Voice Call</button>
+        <button class="modal-btn btn-cancel" id="closeModalBtn">Cancel</button>
     </div>
-    <div class="video-controls"><button class="btn-hangup" id="hangup-btn">🎀 End Call</button></div>
 </div>
 
 <script>
-    const chatBox = document.getElementById('chat-box');
-    const textInput = document.getElementById('text-input');
-    const sendBtn = document.getElementById('send-btn');
-    const replyPreviewBox = document.getElementById('reply-preview-box');
-    const replyPreviewText = document.getElementById('reply-preview-text');
-    const editPreviewBox = document.getElementById('edit-preview-box');
-    const editPreviewText = document.getElementById('edit-preview-text');
+    const chatBox = document.getElementById('chatBox');
+    const msgInput = document.getElementById('msgInput');
+    const sendBtn = document.getElementById('sendBtn');
+    const micBtn = document.getElementById('micBtn');
+    const callMenuBtn = document.getElementById('callMenuBtn');
+    const callModal = document.getElementById('callModal');
+    const closeModalBtn = document.getElementById('closeModalBtn');
+    const replyDock = document.getElementById('replyDock');
+    const replyDockText = document.getElementById('replyDockText');
+    const cancelReplyBtn = document.getElementById('cancelReplyBtn');
+    const partnerStatusText = document.getElementById('partnerStatusText');
+    const myNameDisplay = document.getElementById('myNameDisplay');
 
-    // Keep your existing variables here...
-    let currentReplyToId = null;
-    let currentEditMsgId = null;
-    let totalMessagesCachedCount = 0;
+    const currentUserId = <?php echo json_encode($_SESSION["user_id"]); ?>;
+    const rawUserName = <?php echo json_encode($_SESSION["username"]); ?>;
     
-    // NEW TRACKER: Keeps the menu open during background refreshes
-    let currentOpenMenuId = null; 
+    // Auto-detect names: If logged in as Mickey, partner is Ryry
+    const myName = (rawUserName.toLowerCase() === 'mickey') ? 'Mickey' : 'Ryry';
+    const partnerName = (myName === 'Mickey') ? 'Ryry' : 'Mickey';
+    myNameDisplay.textContent = myName;
 
-    function scrollToBottom() { chatBox.scrollTop = chatBox.scrollHeight; }
+    let activeReplyString = "";
+    let mediaRecorder;
+    let audioChunks = [];
+    let isRecording = false;
 
-    // 1. POPUP THREE DOTS MENU CONTROLS (Updated to track open state)
-    function toggleMenu(event, msgId) {
-        event.stopPropagation();
-        const menu = document.getElementById(`menu-${msgId}`);
-        const isCurrentlyOpen = menu.style.display === 'block';
+    // Call Feature perfectly configured via Jitsi Meet Secure Bridge
+    callMenuBtn.addEventListener('click', () => {
+        document.querySelector('.modal-content h3').textContent = "Connect with " + partnerName + " 💙";
+        callModal.style.display = 'flex';
+    });
+    closeModalBtn.addEventListener('click', () => callModal.style.display = 'none');
+    
+    function triggerCall(isVideo) {
+        callModal.style.display = 'none';
+        // Creates a unique, secure URL just for Mickey and Ryry
+        const roomName = "OurPrivateNest_MickeyAndRyry_2026";
+        const url = `https://meet.jit.si/${roomName}#config.startWithVideoMuted=${!isVideo}`;
+        window.open(url, '_blank');
         
-        if (isCurrentlyOpen) {
-            menu.style.display = 'none';
-            currentOpenMenuId = null;
-        } else {
-            closeAllMenus();
-            menu.style.display = 'block';
-            currentOpenMenuId = msgId; // Remember this menu is open
-        }
+        // Auto-send a message letting them know you are calling
+        const callType = isVideo ? "📹 Video" : "🔊 Voice";
+        dispatchMessage(`[SYSTEM] I am starting a ${callType} call! Join me here: ${url}`);
     }
 
-    function closeAllMenus() {
-        document.querySelectorAll('.action-dropdown-list').forEach(m => m.style.display = 'none');
-        currentOpenMenuId = null; // Clear tracking when clicking away
-    }
+    cancelReplyBtn.addEventListener('click', () => {
+        activeReplyString = "";
+        replyDock.style.display = 'none';
+    });
 
-    // 2. DISPATCH SUBMISSIONS (REPLY, EDIT & SEND)
-    function triggerReply(msgId, text, type) {
-        cancelEditMode();
-        currentReplyToId = msgId;
-        replyPreviewText.innerText = `Replying to: "${type === 'voice' ? '🎙️ Voice Note' : text}"`;
-        replyPreviewBox.style.display = 'flex';
-        closeAllMenus();
-        textInput.focus();
-    }
-    function cancelReplyMode() { currentReplyToId = null; replyPreviewBox.style.display = 'none'; }
-
-    function triggerEdit(msgId, currentText) {
-        cancelReplyMode();
-        currentEditMsgId = msgId;
-        editPreviewText.innerText = `Editing: "${currentText}"`;
-        editPreviewBox.style.display = 'flex';
-        textInput.value = currentText;
-        closeAllMenus();
-        textInput.focus();
-    }
-    function cancelEditMode() { currentEditMsgId = null; editPreviewBox.style.display = 'none'; textInput.value = ""; }
-
-    async function triggerDelete(msgId) {
-        closeAllMenus();
-        if (!confirm("Delete this message for everyone? 🌸")) return;
-        await fetch('delete_message.php', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ message_id: msgId }) });
-        refreshChatWorkspace();
-    }
-
-    async function handleDispatchedMessage() {
-        const text = textInput.value.trim();
-        if (text === "") return;
-
-        if (currentEditMsgId) {
-            await fetch('edit_message.php', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ message_id: currentEditMsgId, new_content: text }) });
-            cancelEditMode();
-        } else {
-            await fetch('send_message.php', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ message_content: text, reply_to_id: currentReplyToId }) });
-            cancelReplyMode();
-        }
-        textInput.value = "";
-        refreshChatWorkspace();
-    }
-    sendBtn.addEventListener('click', handleDispatchedMessage);
-    textInput.addEventListener('keypress', (e) => { if (e.key === 'Enter') handleDispatchedMessage(); });
-
-    // 3. ENHANCED EMOJI CELEBRATION LAUNCHER MATRIX
-    function launchEmojiCelebration() {
-        const sweetEmojis = ['💖', '💕', '🌸', '✨', '👑', '🥰', '🎈', '❤️', '🌹'];
-        for (let i = 0; i < 8; i++) {
-            setTimeout(() => {
-                const emo = document.createElement('div');
-                emo.classList.add('falling-emoji');
-                emo.innerText = sweetEmojis[Math.floor(Math.random() * sweetEmojis.length)];
-                emo.style.left = `${Math.random() * 80 + 10}%`;
-                emo.style.bottom = '15%';
-                chatBox.appendChild(emo);
-                setTimeout(() => emo.remove(), 1200);
-            }, i * 95);
-        }
-    }
-
-    // 4. BACKGROUND FEED REALTIME ENGINE (Updated to persist the menu)
-    async function refreshChatWorkspace() {
-        try {
-            const response = await fetch('fetch_messages.php');
-            const updatedHtml = await response.text();
-            
-            const tempDiv = document.createElement('div');
-            tempDiv.innerHTML = updatedHtml;
-            const liveCount = tempDiv.querySelectorAll('.bubble-container').length;
-
-            // Save the currently active open menu state before rendering updates
-            const savedMenuId = currentOpenMenuId;
-
-            if (liveCount > totalMessagesCachedCount) {
-                if (totalMessagesCachedCount !== 0) { launchEmojiCelebration(); } 
-                totalMessagesCachedCount = liveCount;
-                chatBox.innerHTML = updatedHtml;
-                scrollToBottom();
-            } else {
-                const shouldScroll = (chatBox.scrollTop + chatBox.clientHeight >= chatBox.scrollHeight - 120);
-                chatBox.innerHTML = updatedHtml;
-                if (shouldScroll) { scrollToBottom(); }
-            }
-
-            // RESTORE STATE: If a menu was open, make sure it stays visible after the update
-            if (savedMenuId) {
-                const menu = document.getElementById(`menu-${savedMenuId}`);
-                if (menu) {
-                    menu.style.display = 'block';
-                    currentOpenMenuId = savedMenuId;
+    function fetchMessages() {
+        fetch('fetch_messages.php')
+            .then(res => res.json())
+            .then(data => {
+                if (data.status === "error") return;
+                
+                // Live Connection Status
+                if (data.partner_online) {
+                    partnerStatusText.innerHTML = "🟢 " + partnerName + " is online";
+                    partnerStatusText.style.color = "#3b82f6"; // Blue for online
+                } else {
+                    partnerStatusText.innerHTML = "⚪ " + partnerName + " is away";
+                    partnerStatusText.style.color = "#9ca3af";
                 }
-            }
-        } catch (err) { }
+
+                const isAtBottom = chatBox.scrollHeight - chatBox.clientHeight <= chatBox.scrollTop + 60;
+                chatBox.innerHTML = "";
+                
+                data.messages.forEach(msg => {
+                    const isMe = (parseInt(msg.user_id) === parseInt(currentUserId));
+                    const wrapper = document.createElement('div');
+                    wrapper.classList.add('msg-wrapper', isMe ? 'me' : 'her');
+                    
+                    if (msg.message.includes("[Replying to:")) {
+                        const parts = msg.message.split('] ');
+                        const contextHeader = document.createElement('div');
+                        contextHeader.classList.add('reply-context');
+                        contextHeader.textContent = parts[0].replace('[', '') + '...';
+                        wrapper.appendChild(contextHeader);
+                        msg.message = parts.slice(1).join('] ');
+                    }
+
+                    const bubble = document.createElement('div');
+                    bubble.classList.add('msg-bubble');
+                    
+                    if (msg.message.startsWith('data:audio')) {
+                        const audio = document.createElement('audio');
+                        audio.controls = true;
+                        audio.src = msg.message;
+                        bubble.appendChild(audio);
+                    } else if (msg.message.includes("https://meet.jit.si/")) {
+                        // Style Call Links specially
+                        bubble.innerHTML = msg.message.replace(/(https:\/\/[^\s]+)/g, "<a href='$1' target='_blank' style='color:#ffe4e6; text-decoration:underline; font-weight:bold;'>Click to Join Call</a>");
+                    } else {
+                        bubble.textContent = msg.message;
+                    }
+                    wrapper.appendChild(bubble);
+
+                    const metaSubbar = document.createElement('div');
+                    metaSubbar.classList.add('msg-meta-subbar');
+
+                    const actions = document.createElement('div');
+                    actions.classList.add('msg-actions');
+                    if (isMe) {
+                        const delBtn = document.createElement('span');
+                        delBtn.textContent = "🗑️ Delete";
+                        delBtn.onclick = () => { if(confirm("Delete message?")) executeAction('delete', msg.id); };
+                        actions.appendChild(delBtn);
+                    } else {
+                        const repBtn = document.createElement('span');
+                        repBtn.textContent = "↩️ Reply";
+                        repBtn.onclick = () => {
+                            const cleanExcerpt = msg.message.startsWith('data:audio') ? "Voice Note" : msg.message.substring(0, 15);
+                            activeReplyString = "[Replying to: " + cleanExcerpt + "] ";
+                            replyDockText.textContent = "Replying to: \"" + cleanExcerpt + "...\"";
+                            replyDock.style.display = 'flex';
+                            msgInput.focus();
+                        };
+                        actions.appendChild(repBtn);
+                    }
+                    metaSubbar.appendChild(actions);
+
+                    if (isMe) {
+                        const receipt = document.createElement('div');
+                        if (parseInt(msg.is_read) === 1) {
+                            receipt.classList.add('receipt-mark', 'seen');
+                            receipt.innerHTML = "✓✓ Read"; // Updated to Read
+                        } else {
+                            receipt.classList.add('receipt-mark');
+                            receipt.innerHTML = "✓ Sent";
+                        }
+                        metaSubbar.appendChild(receipt);
+                    }
+
+                    wrapper.appendChild(metaSubbar);
+                    chatBox.appendChild(wrapper);
+                });
+                
+                if (isAtBottom) chatBox.scrollTop = chatBox.scrollHeight;
+            });
     }
-    setInterval(refreshChatWorkspace, 1500);
 
-    // 5. SECURE VOICE NOTES CORE EXTENSION
-    let mediaRecorder; let audioChunks = []; let isRecording = false;
-    const micBtn = document.getElementById('mic-btn');
-
-    micBtn.addEventListener('click', async () => {
-        if (!isRecording) {
-            try {
-                const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-                let typeOptions = { mimeType: 'audio/webm' };
-                if (!MediaRecorder.isTypeSupported('audio/webm')) { typeOptions = { mimeType: 'audio/aac' }; }
-
-                mediaRecorder = new MediaRecorder(stream, typeOptions);
-                audioChunks = [];
-                mediaRecorder.ondataavailable = e => { if (e.data.size > 0) audioChunks.push(e.data); };
-                mediaRecorder.onstop = async () => {
-                    const audioBlob = new Blob(audioChunks, { type: typeOptions.mimeType });
-                    const formData = new FormData();
-                    formData.append('audio_data', audioBlob);
-
-                    micBtn.innerText = "⏳";
-                    const resp = await fetch('upload_voice.php', { method: 'POST', body: formData });
-                    const res = await resp.json();
-                    if (res.status === 'success') { refreshChatWorkspace(); }
-                    micBtn.innerText = "🎙️";
-                    stream.getTracks().forEach(t => t.stop());
-                };
-                mediaRecorder.start(250);
-                isRecording = true; micBtn.classList.add('recording'); micBtn.innerText = "🛑";
-            } catch (err) { alert("Microphone access blocked. Check your connection protocol!"); }
-        } else { mediaRecorder.stop(); isRecording = false; micBtn.classList.remove('recording'); }
-    });
-
-    // 6. WEBRTC ENGINE SIGNALLING TERMINAL
-    let localStream; let peerConnection;
-    const videoOverlay = document.getElementById('video-overlay-pane');
-    const localVideo = document.getElementById('local-video');
-    const remoteVideo = document.getElementById('remote-video');
-    const startCallBtn = document.getElementById('call-start-btn');
-    const hangupBtn = document.getElementById('hangup-btn');
-    const rtcConfig = { iceServers: [{ urls: 'stun:stun.l.google.com:19302' }] };
-
-    startCallBtn.addEventListener('click', async () => {
-        videoOverlay.style.display = 'flex';
-        localStream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
-        localVideo.srcObject = localStream;
-        peerConnection = new RTCPeerConnection(rtcConfig);
-        localStream.getTracks().forEach(track => peerConnection.addTrack(track, localStream));
-        peerConnection.ontrack = e => { if (remoteVideo.srcObject !== e.streams[0]) remoteVideo.srcObject = e.streams[0]; };
-        peerConnection.onicecandidate = e => { if (e.candidate) sendSignal('ice_candidate', e.candidate); };
-        const offer = await peerConnection.createOffer();
-        await peerConnection.setLocalDescription(offer);
-        sendSignal('offer', offer);
-    });
-
-    async function sendSignal(type, payload) {
-        await fetch('signal.php?action=send', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ type: type, payload: payload }) });
+    function executeAction(actionType, id) {
+        const formData = new FormData();
+        formData.append('action', actionType);
+        formData.append('id', id);
+        fetch('message_actions.php', { method: 'POST', body: formData }).then(() => fetchMessages());
     }
 
-    async function checkIncomingSignals() {
-        try {
-            const response = await fetch('signal.php?action=fetch');
-            const signals = await response.json();
-            for (let signal of signals) {
-                const data = JSON.parse(signal.payload);
-                if (signal.type === 'offer' && !peerConnection) {
-                    videoOverlay.style.display = 'flex';
-                    localStream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
-                    localVideo.srcObject = localStream;
-                    peerConnection = new RTCPeerConnection(rtcConfig);
-                    localStream.getTracks().forEach(track => peerConnection.addTrack(track, localStream));
-                    peerConnection.ontrack = e => { if (remoteVideo.srcObject !== e.streams[0]) remoteVideo.srcObject = e.streams[0]; };
-                    peerConnection.onicecandidate = e => { if (e.candidate) sendSignal('ice_candidate', e.candidate); };
-                    await peerConnection.setRemoteDescription(new RTCSessionDescription(data));
-                    const answer = await peerConnection.createAnswer();
-                    await peerConnection.setLocalDescription(answer);
-                    sendSignal('answer', answer);
-                } else if (signal.type === 'answer' && peerConnection) {
-                    if (!peerConnection.currentRemoteDescription) { await peerConnection.setRemoteDescription(new RTCSessionDescription(data)); }
-                } else if (signal.type === 'ice_candidate' && peerConnection) {
-                    try { await peerConnection.addIceCandidate(new RTCIceCandidate(data)); } catch (e) {}
-                } else if (signal.type === 'hangup') { closeCallSession(false); }
-            }
-        } catch (err) {}
+    function dispatchMessage(payloadText) {
+        const finalMsg = activeReplyString + payloadText;
+        const formData = new FormData();
+        formData.append('message', finalMsg);
+        
+        fetch('insert_message.php', { method: 'POST', body: formData })
+        .then(() => {
+            msgInput.value = "";
+            activeReplyString = "";
+            replyDock.style.display = 'none';
+            fetchMessages();
+        }).finally(() => { msgInput.disabled = false; msgInput.focus(); });
     }
-    setInterval(checkIncomingSignals, 1600);
 
-    function closeCallSession(notifyPartner = true) {
-        if (notifyPartner) sendSignal('hangup', {});
-        if (peerConnection) { peerConnection.close(); peerConnection = null; }
-        if (localStream) { localStream.getTracks().forEach(track => track.stop()); localStream = null; }
-        videoOverlay.style.display = 'none';
-        fetch('signal.php?action=clear', { method: 'POST' });
-    }
-    hangupBtn.addEventListener('click', () => closeCallSession(true));
+    sendBtn.addEventListener('click', () => { if(msgInput.value.trim() !== "") { msgInput.disabled = true; dispatchMessage(msgInput.value.trim()); }});
+    msgInput.addEventListener('keypress', (e) => { if(e.key === 'Enter') sendBtn.click(); });
+
+    fetchMessages();
+    setInterval(fetchMessages, 2500);
 </script>
 </body>
 </html>

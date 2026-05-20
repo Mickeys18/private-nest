@@ -1,5 +1,5 @@
 <?php
-// Force session parameters to be distinct per browser context
+// Force clean session contexts per independent browser
 if (session_status() === PHP_SESSION_NONE) {
     session_start();
 }
@@ -11,13 +11,13 @@ $username_err = $password_err = $login_err = "";
 
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
     if (empty(trim($_POST["username"]))) {
-        $username_err = "Please enter your royal name 👑";
+        $username_err = "Who is knocked at the door? 👑";
     } else {
         $username = trim($_POST["username"]);
     }
     
     if (empty(trim($_POST["password"]))) {
-        $password_err = "Please enter your secret password 🔑";
+        $password_err = "Enter our secret password key! 🔑";
     } else {
         $password = trim($_POST["password"]);
     }
@@ -35,14 +35,13 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                         $id = $row["id"];
                         $hashed_password = $row["password"];
                         
-                        // Supports both plain text testing and hashed database values
                         if ($password === $hashed_password || password_verify($password, $hashed_password)) {
-                            
-                            // CRITICAL FIX: Destroy completely any old session cookie footprint before rewriting
+                            // Clear out any old cross-over cookies on the server side
                             session_unset();
                             session_destroy();
-                            session_start();
                             
+                            // Re-bootstrap fresh secure isolated space
+                            session_start();
                             $_SESSION["loggedin"] = true;
                             $_SESSION["user_id"] = $id;
                             $_SESSION["id"] = $id;
@@ -51,14 +50,14 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                             header("location: index.php");
                             exit;
                         } else {
-                            $login_err = "Invalid password! Try again, love 💔";
+                            $login_err = "Wrong password key, my love! 💔";
                         }
                     }
                 } else {
-                    $login_err = "Username not found in our nest 🕵️‍♂️";
+                    $login_err = "That profile isn't in our nest 🕵️‍♂️";
                 }
             } else {
-                $login_err = "Oops! Something went wrong with the database link ⚡";
+                $login_err = "Our communication line dropped. Try again! ⚡";
             }
             unset($stmt);
         }
@@ -70,111 +69,164 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Our Private Space Login 🔑💙</title>
+    <title>Our Private Space — Entrance 🔐💙</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <style>
         body { 
-            font-family: 'Segoe UI', Roboto, sans-serif; 
-            background: linear-gradient(135deg, #cfe2fe 0%, #f0f6ff 50%, #ffffff 100%); 
+            font-family: 'Segoe UI', Roboto, Helvetica, sans-serif; 
+            background: linear-gradient(135deg, #b3d1ff 0%, #e6f0ff 50%, #ffffff 100%); 
             display: flex; 
             justify-content: center; 
             align-items: center; 
             height: 100vh; 
             margin: 0; 
+            overflow: hidden;
+            position: relative;
         }
-        .wrapper { 
-            width: 100%; 
-            max-width: 360px; 
-            padding: 35px 30px; 
-            background: white; 
-            border-radius: 32px; 
-            box-shadow: 0 20px 50px rgba(37, 99, 235, 0.12); 
-            border: 1px solid #dbeafe; 
-            text-align: center;
-        }
-        .avatar-logo {
-            font-size: 3.5rem;
-            margin-bottom: 10px;
-            animation: float 3s ease-in-out infinite;
-        }
-        h2 { color: #1e40af; margin: 0 0 5px 0; font-size: 1.6rem; }
-        p { color: #64748b; font-size: 0.9rem; margin: 0 0 25px 0; }
         
-        .form-group { margin-bottom: 20px; text-align: left; }
-        .form-group label { display: block; margin-bottom: 6px; color: #1e3a8a; font-weight: 600; font-size: 0.85rem; }
+        /* Floating background decoration */
+        .floating-heart {
+            position: absolute;
+            font-size: 2rem;
+            color: rgba(37, 99, 235, 0.15);
+            animation: floatUpDown 4s ease-in-out infinite;
+            user-select: none;
+            pointer-events: none;
+        }
+        
+        .wrapper { 
+            width: 90%; 
+            max-width: 360px; 
+            padding: 40px 30px; 
+            background: rgba(255, 255, 255, 0.95); 
+            border-radius: 35px; 
+            box-shadow: 0 25px 60px rgba(37, 99, 235, 0.15); 
+            border: 1px solid rgba(191, 219, 254, 0.6); 
+            text-align: center;
+            backdrop-filter: blur(10px);
+            z-index: 10;
+        }
+        
+        .avatar-vault {
+            width: 80px;
+            height: 80px;
+            background: #eff6ff;
+            margin: 0 auto 20px auto;
+            border-radius: 50%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 2.5rem;
+            box-shadow: inset 0 4px 10px rgba(37, 99, 235, 0.05);
+            animation: pulseGlow 2s infinite;
+        }
+        
+        h2 { color: #1e3a8a; margin: 0 0 8px 0; font-size: 1.7rem; font-weight: 800; letter-spacing: -0.5px; }
+        p { color: #64748b; font-size: 0.9rem; margin: 0 0 30px 0; font-weight: 500; }
+        
+        .form-group { margin-bottom: 22px; text-align: left; }
+        .form-group label { display: block; margin-bottom: 8px; color: #1e40af; font-weight: 700; font-size: 0.85rem; text-transform: uppercase; letter-spacing: 0.5px; }
+        
+        .input-wrapper {
+            position: relative;
+            display: flex;
+            align-items: center;
+        }
         
         .form-control { 
             width: 100%; 
-            padding: 12px 16px; 
-            border: 1.5px solid #dbeafe; 
-            border-radius: 14px; 
+            padding: 14px 16px; 
+            border: 2px solid #dbeafe; 
+            border-radius: 16px; 
             box-sizing: border-box; 
             font-size: 0.95rem;
             color: #1e3a8a;
+            background: #ffffff;
             outline: none;
-            transition: 0.2s;
+            transition: all 0.25s ease;
+            font-weight: 500;
         }
         .form-control:focus {
-            border-color: #3b82f6;
-            box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.1);
+            border-color: #2563eb;
+            box-shadow: 0 0 0 5px rgba(37, 99, 235, 0.15);
+            background: #ffffff;
         }
         
-        .btn-primary { 
+        .btn-submit { 
             width: 100%; 
-            padding: 14px; 
-            background: #2563eb; 
+            padding: 15px; 
+            background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%); 
             border: none; 
             color: white; 
-            border-radius: 14px; 
-            font-weight: bold; 
+            border-radius: 16px; 
+            font-weight: 700; 
             font-size: 1rem;
             cursor: pointer; 
             margin-top: 10px; 
-            box-shadow: 0 4px 12px rgba(37, 99, 235, 0.2);
-            transition: 0.2s;
+            box-shadow: 0 8px 20px rgba(37, 99, 235, 0.3);
+            transition: all 0.2s ease;
         }
-        .btn-primary:hover {
-            background: #1d4ed8;
-            transform: translateY(-1px);
+        .btn-submit:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 12px 24px rgba(37, 99, 235, 0.4);
+        }
+        .btn-submit:active {
+            transform: translateY(0);
         }
         
-        .error { color: #ef4444; font-size: 0.8rem; margin-top: 5px; font-weight: 500; }
-        .global-error { background: #fee2e2; color: #b91c1c; padding: 10px; border-radius: 12px; font-size: 0.85rem; margin-bottom: 20px; border: 1px solid #fca5a5; }
+        .error { color: #ef4444; font-size: 0.8rem; margin-top: 6px; font-weight: 600; text-align: left; display: block; }
+        .alert-toast { background: #fee2e2; color: #b91c1c; padding: 12px 15px; border-radius: 14px; font-size: 0.85rem; margin-bottom: 24px; border: 1px solid #fca5a5; font-weight: 600; display: flex; align-items: center; justify-content: center; gap: 8px; }
 
-        @keyframes float {
-            0% { transform: translateY(0px); }
-            50% { transform: translateY(-8px); }
-            100% { transform: translateY(0px); }
+        @keyframes pulseGlow {
+            0% { transform: scale(1); box-shadow: 0 0 0 0 rgba(37, 99, 235, 0.2); }
+            70% { transform: scale(1.03); box-shadow: 0 0 0 10px rgba(37, 99, 235, 0); }
+            100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(37, 99, 235, 0); }
+        }
+        @keyframes floatUpDown {
+            0% { transform: translateY(0px) rotate(0deg); }
+            50% { transform: translateY(-15px) rotate(5deg); }
+            100% { transform: translateY(0px) rotate(0deg); }
         }
     </style>
 </head>
 <body>
+
+<div class="floating-heart" style="top: 15%; left: 10%; animation-delay: 0s;">💙</div>
+<div class="floating-heart" style="top: 75%; left: 15%; animation-delay: 1.5s;">✨</div>
+<div class="floating-heart" style="top: 20%; right: 12%; animation-delay: 0.7s;">🕊️</div>
+<div class="floating-heart" style="top: 70%; right: 10%; animation-delay: 2.2s;">🔒</div>
+
 <div class="wrapper">
-    <div class="avatar-logo">🔒💙</div>
-    <h2>Welcome Back</h2>
-    <p>Enter our private sanctuary ✨</p>
+    <div class="avatar-vault">🔐</div>
+    <h2>Our Private Space</h2>
+    <p>Welcome back inside our sanctuary ✨</p>
     
     <?php 
     if(!empty($login_err)){
-        echo '<div class="global-error">' . $login_err . '</div>';
+        echo '<div class="alert-toast">⚠️ ' . $login_err . '</div>';
     }        
     ?>
     
     <form action="<?php echo htmlspecialchars($_SERVER["PHP_SELF"]); ?>" method="post">
         <div class="form-group">
             <label>Username 👑</label>
-            <input type="text" name="username" class="form-control" value="<?php echo $username; ?>" placeholder="Who is connecting?">
+            <div class="input-wrapper">
+                <input type="text" name="username" class="form-control" value="<?php echo $username; ?>" placeholder="Enter your nickname...">
+            </div>
             <span class="error"><?php echo $username_err; ?></span>
         </div>    
+        
         <div class="form-group">
             <label>Password 🔑</label>
-            <input type="password" name="password" class="form-control" placeholder="Our secret passkey...">
+            <div class="input-wrapper">
+                <input type="password" name="password" class="form-control" placeholder="Our secret entry code...">
+            </div>
             <span class="error"><?php echo $password_err; ?></span>
         </div>
-        <div class="form-group">
-            <input type="submit" class="btn-primary" value="Open Nest 🕊️">
-        </div>
+        
+        <button type="submit" class="btn-submit">Open Our Nest 🕊️💙</button>
     </form>
 </div>
+
 </body>
 </html>
